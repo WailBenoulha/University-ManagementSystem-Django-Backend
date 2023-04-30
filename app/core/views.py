@@ -136,7 +136,7 @@ class LoacationViewSets(viewsets.ViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-    def destroy(self, request, pk):
+    def delete(self, request, pk):
         try:
             location = models.Location.objects.get(pk=pk)
         except models.Location.DoesNotExist:
@@ -338,8 +338,15 @@ class AffectationApiView(APIView):
             return Response(serializer.data)
 
     def post(self, request):
+        location_name =request.data.get('Location')
+        if location_name.lower() in ['stock1','stock2','stock3','stock','stock4','stock5','stock6','stock7','stock8']:
+            return Response(
+                {
+                    'message' : 'the equipement is usually on stock you should choose anouther location to run the affectation to !'
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
         serializer = serializers.AffectationSerializer(data=request.data)
-
         if serializer.is_valid():
             serializer.save()
             return Response(
@@ -474,3 +481,54 @@ class InventoryApiView(APIView):
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+class AllocationApiView(APIView):
+    queryset = models.Allocation.objects.all()
+    serializer_class = serializers.AllocationSerializer
+
+    def get(self, request, pk=None):
+        if pk:
+            try:
+                allocation = models.Allocation.objects.get(pk=pk)
+            except models.Allocation.DoesNotExist:
+                return Response(
+                    {
+                    'message' : 'the equipement that you tryna access is not exist'
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            serializer = serializers.AllocationSerializer(allocation)
+            return Response(serializer.data)
+        else:
+            allocation = models.Allocation.objects.all()
+            serializer = serializers.AllocationSerializer(allocation, many=True)
+            return Response(serializer.data)
+
+    def delete(self, request, pk=None):
+        if pk:
+            try:
+                allocation = models.Allocation.objects.get(pk=pk)
+            except models.Allocation.DoesNotExist:
+                return Response(
+                    {
+                    'message' : 'the equipement that you tryna access is not exist'
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            allocation.delete()
+            return Response(
+                {
+                'message' : 'the equipement deleted successfuly in the ITroom'
+                },
+                status=status.HTTP_204_NO_CONTENT
+            )
+        else:
+            allocation = models.Allocation.objects.all()
+            allocation.delete()
+            return Response(
+                {
+                'message' : 'all the equipements deleted successfully in the ITroom'
+                },
+                status=status.HTTP_204_NO_CONTENT
+            )
+

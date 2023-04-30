@@ -182,7 +182,6 @@ class Stock(models.Model):
         to_field='name',
         on_delete=models.CASCADE
     )
-    reference = models.CharField(max_length=7, unique=True, editable=False)
     num_serie = models.CharField(max_length=6, unique=True, editable=False)
     CONDITION_CHOICES =(
         ('new','New'),
@@ -207,11 +206,6 @@ class Stock(models.Model):
     image = models.ImageField(upload_to='images/', default='')
 
     def save(self, *args, **kwargs):
-        # Generate a unique reference number
-        if not self.pk:
-            # If the object is being created (i.e. it doesn't have a primary key yet),
-            # generate the reference field based on the name field.
-            self.reference = '{}-{:05d}'.format(self.name[:2].upper(), Stock.objects.count() + 1)
 
         # Generate a unique num_serie
         while True:
@@ -221,7 +215,7 @@ class Stock(models.Model):
 
         self.num_serie = num_serie
 
-        location = Location.objects.get(name='stock1')
+        location = Location.objects.get(type='stocks')
         self.Location = location
 
         super().save(*args, **kwargs)
@@ -234,7 +228,6 @@ class Stock(models.Model):
                 brand=self.brand,
                 model=self.model,
                 categorie=self.categorie,
-                reference=self.reference,
                 num_serie=self.num_serie,
                 condition=self.condition,
                 facture_number=self.facture_number,
@@ -245,13 +238,6 @@ class Stock(models.Model):
                 image=self.image
             )
             equipement.save()
-
-    def clean(self):
-        # Check that the reference and num_serie fields are not empty
-        if not self.reference:
-            raise ValidationError('The reference field cannot be empty')
-        if not self.num_serie:
-            raise ValidationError('The num_serie field cannot be empty')
 
     def __str__(self):
         return self.name
@@ -278,28 +264,110 @@ class Affectation(models.Model):
         self.opperation = f"The equipment {self.reference.reference} affected to the location {self.Location.name}"
         super().save(*args, **kwargs)
 
-        ref = self.reference
-        equipement = Equipement.objects.get(id=ref.id)
-        inventory_equipement = Inventory(
-            created_by = equipement.created_by,
-            name=equipement.name,
-            brand=equipement.brand,
-            model=equipement.model,
-            categorie=equipement.categorie,
-            reference=equipement.reference,
-            num_serie=equipement.num_serie,
-            condition=equipement.condition,
-            facture_number=equipement.facture_number,
-            date_purchase=equipement.date_purchase,
-            Location=self.Location,
-            date_assignment=self.date_assignment,
-            discription=equipement.discription,
-            image=equipement.image
-        )
-        inventory_equipement.save()
-        equipement.delete()
+        if self.Location.type == 'it_room':
+            ref = self.reference
+            equipement = Equipement.objects.get(id=ref.id)
+            inventory_equipement = Inventory(
+                created_by = equipement.created_by,
+                name=equipement.name,
+                brand=equipement.brand,
+                model=equipement.model,
+                categorie=equipement.categorie,
+                reference=equipement.reference,
+                num_serie=equipement.num_serie,
+                condition=equipement.condition,
+                facture_number=equipement.facture_number,
+                date_purchase=equipement.date_purchase,
+                Location=self.Location,
+                date_assignment=self.date_assignment,
+                discription=equipement.discription,
+                image=equipement.image
+            )
+            allocation_equipement = Allocation(
+                created_by = equipement.created_by,
+                name=equipement.name,
+                brand=equipement.brand,
+                model=equipement.model,
+                categorie=equipement.categorie,
+                reference=equipement.reference,
+                num_serie=equipement.num_serie,
+                condition=equipement.condition,
+                facture_number=equipement.facture_number,
+                date_purchase=equipement.date_purchase,
+                Location=self.Location,
+                date_assignment=self.date_assignment,
+                discription=equipement.discription,
+                image=equipement.image
+            )
+            allocation_equipement.save()
+            inventory_equipement.save()
+            equipement.delete()
+        else:
+            ref = self.reference
+            equipement = Equipement.objects.get(id=ref.id)
+            inventory_equipement2 = Inventory(
+                created_by = equipement.created_by,
+                name=equipement.name,
+                brand=equipement.brand,
+                model=equipement.model,
+                categorie=equipement.categorie,
+                reference=equipement.reference,
+                num_serie=equipement.num_serie,
+                condition=equipement.condition,
+                facture_number=equipement.facture_number,
+                date_purchase=equipement.date_purchase,
+                Location=self.Location,
+                date_assignment=self.date_assignment,
+                discription=equipement.discription,
+                image=equipement.image
+            )
+            inventory_equipement2.save()
+            equipement.delete()
+
+
 
 class Inventory(models.Model):
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        editable=False,
+        on_delete=models.CASCADE
+    )
+    name = models.CharField(max_length=255, editable=False)
+    brand = models.CharField(max_length=255, editable=False)
+    model = models.CharField(max_length=255, editable=False)
+    categorie = models.ForeignKey(
+        Categorie_Equipement,
+        to_field='name',
+        editable=False,
+        on_delete=models.CASCADE
+    )
+    reference = models.CharField(max_length=7, unique=True, editable=False)
+    num_serie = models.CharField(max_length=6, unique=True, editable=False)
+    CONDITION_CHOICES =(
+        ('new','New'),
+        ('meduim','Meduim'),
+        ('poor','Poor'),
+        ('in_repair','In_repair'),
+        ('stolen','Stolen'),
+        ('reserve','Reserve'),
+    )
+    condition = models.CharField(choices=CONDITION_CHOICES, max_length=255)
+    facture_number = models.IntegerField(editable=False)
+    date_purchase = models.DateField(default=None, editable=False)
+    Location = models.ForeignKey(
+        Location,
+        to_field='name',
+        editable=False,
+        on_delete=models.CASCADE
+    )
+    date_assignment = models.DateField(null=True, editable=False, blank=True)
+    discription = models.TextField(default='')
+    image = models.ImageField(upload_to='images/', default='')
+
+    def __srt__(self):
+        return self.reference
+
+class Allocation(models.Model):
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         editable=False,

@@ -14,6 +14,8 @@ urlpatterns = [
     path('affectation/<int:pk>', views.AffectationApiView.as_view()),
     path('inventory/', views.InventoryApiView.as_view()),
     path('inventory/<int:pk>', views.InventoryApiView.as_view()),
+    path('allocation/', views.AllocationApiView.as_view()),
+    path('allocation/<int:pk>', views.AllocationApiView.as_view()),
     path('equipement/', views.EquipementApiview.as_view()),
     path('equipement/<int:pk>/', views.EquipementApiview.as_view()),
     path('Adminpage/location/<int:pk>/', views.LoacationViewSets.as_view({'get':'list', 'delete':'destroy', 'put':'update'})),

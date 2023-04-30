@@ -32,3 +32,8 @@ class InventorySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Inventory
         fields = ('id', 'created_by', 'name', 'brand', 'model', 'categorie', 'reference', 'num_serie', 'condition', 'facture_number', 'date_purchase', 'Location', 'date_assignment','discription', 'image')
+
+class AllocationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Allocation
+        fields = ('id', 'created_by', 'name', 'brand', 'model', 'categorie', 'reference', 'num_serie', 'condition', 'facture_number', 'date_purchase', 'Location', 'date_assignment','discription', 'image')
