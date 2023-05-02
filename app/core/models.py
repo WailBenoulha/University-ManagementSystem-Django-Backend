@@ -142,8 +142,7 @@ class Equipement(models.Model):
     Location = models.ForeignKey(
         Location,
         to_field='name',
-        on_delete=models.CASCADE,
-        default=Location.objects.get(name='stock1').id
+        on_delete=models.CASCADE
     )
     date_assignment = models.DateField(null=True, editable=False, blank=True)
     discription = models.TextField(default='')
@@ -154,7 +153,13 @@ class Equipement(models.Model):
         if not self.pk:
             # If the object is being created (i.e. it doesn't have a primary key yet),
             # generate the reference field based on the name field.
-            self.reference = '{}-{:05d}'.format(self.name[:2].upper(), Equipement.objects.count() + 1)
+            prefix = self.name[:2].upper()
+            while True:
+                num = str(random.randint(10000, 99999)).zfill(5)
+                ref = f"{prefix}-{num}"
+                if not Equipement.objects.filter(reference=ref).exists():
+                    break
+            self.reference = ref
 
         # Generate a unique num_serie
         while True:
@@ -166,7 +171,7 @@ class Equipement(models.Model):
 
         super().save(*args, **kwargs)
 
-    def __srt__(self):
+    def __str__(self):
         return self.reference
 
 class Stock(models.Model):
@@ -249,6 +254,7 @@ def validate_reference(value):
 class Affectation(models.Model):
     reference = models.ForeignKey(
         Equipement,
+        to_field='reference',
         on_delete=models.CASCADE
     )
     Location = models.ForeignKey(
@@ -261,12 +267,12 @@ class Affectation(models.Model):
 
     def save(self, *args, **kwargs):
 
-        self.opperation = f"The equipment {self.reference.reference} affected to the location {self.Location.name}"
+        self.opperation = f"The equipment {self.reference.name} {self.reference.brand} {self.reference.model} {self.reference.reference} affected to the location {self.Location.name}"
         super().save(*args, **kwargs)
 
         if self.Location.type == 'it_room':
             ref = self.reference
-            equipement = Equipement.objects.get(id=ref.id)
+            equipement = Equipement.objects.get(id=ref.id) #hna ta9der tbdel reference w t3awedha bl id 3la 7sab wach rah tconsulte
             inventory_equipement = Inventory(
                 created_by = equipement.created_by,
                 name=equipement.name,
@@ -368,6 +374,124 @@ class Inventory(models.Model):
         return self.reference
 
 class Allocation(models.Model):
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        editable=False,
+        on_delete=models.CASCADE
+    )
+    name = models.CharField(max_length=255, editable=False)
+    brand = models.CharField(max_length=255, editable=False)
+    model = models.CharField(max_length=255, editable=False)
+    categorie = models.ForeignKey(
+        Categorie_Equipement,
+        to_field='name',
+        editable=False,
+        on_delete=models.CASCADE
+    )
+    reference = models.CharField(max_length=7, unique=True, editable=False)
+    num_serie = models.CharField(max_length=6, unique=True, editable=False)
+    CONDITION_CHOICES =(
+        ('new','New'),
+        ('meduim','Meduim'),
+        ('poor','Poor'),
+        ('in_repair','In_repair'),
+        ('stolen','Stolen'),
+        ('reserve','Reserve'),
+    )
+    condition = models.CharField(choices=CONDITION_CHOICES, max_length=255)
+    facture_number = models.IntegerField(editable=False)
+    date_purchase = models.DateField(default=None, editable=False)
+    Location = models.ForeignKey(
+        Location,
+        to_field='name',
+        editable=False,
+        on_delete=models.CASCADE
+    )
+    date_assignment = models.DateField(null=True, editable=False, blank=True)
+    discription = models.TextField(default='')
+    image = models.ImageField(upload_to='images/', default='')
+
+    def __srt__(self):
+        return self.reference
+
+class Allocate(models.Model):
+    reference = models.ForeignKey(
+        Allocation,
+        to_field='reference',
+        on_delete=models.CASCADE
+    )
+    start_date = models.DateTimeField()
+    finish_date = models.DateTimeField()
+    purpose = models.TextField(max_length=255, default='')
+    Message = models.TextField(editable=False)
+
+    def save(self, *args, **kwargs):
+        self.Message = f"the student asked to allocate the equipement {self.reference.name} {self.reference.brand} {self.reference.model} {self.reference.reference} at the startdate {self.start_date} and the finishdate {self.finish_date}"
+        super().save(*args, **kwargs)
+
+        ref = self.reference
+        equipement = Allocation.objects.get(id=ref.id)
+        notification_to_manager = NotificationStudent(
+            message = self.Message,
+            reference = equipement.reference
+        )
+        notification_to_manager.save()
+
+class NotificationStudent(models.Model):
+    message = models.TextField(editable=False, unique=True)
+    reference = models.CharField(max_length=7, editable=False)
+
+    def __str__(self):
+        return self.message
+
+class Acceptrequest(models.Model):
+    Allocation_request = models.ForeignKey(
+        NotificationStudent,
+        on_delete=models.CASCADE
+    )
+    accept = models.BooleanField()
+    message1 = models.TextField(editable=False, default='')
+    message2 = models.TextField(editable=False, default='')
+
+    def save(self, *args, **kwargs):
+        self.message1 = f"the Admin accept your request"
+        self.message2 = f"the Admin refuse your request"
+        super().save(*args, **kwargs)
+
+        if self.accept == True:
+            allocation_ref = self.Allocation_request.reference
+            equipement = Allocation.objects.get(reference=allocation_ref)
+            reserved_equipement = ReservedEquip.objects.create(
+                created_by = equipement.created_by,
+                name = equipement.name,
+                brand = equipement.brand,
+                model = equipement.model,
+                categorie = equipement.categorie,
+                reference = equipement.reference,
+                num_serie = equipement.num_serie,
+                condition = equipement.condition,
+                facture_number = equipement.facture_number,
+                date_purchase = equipement.date_purchase,
+                Location = equipement.Location,
+                date_assignment =equipement.date_assignment,
+                discription = equipement.discription,
+                image = equipement.image
+            )
+            notification = NotificationManager.objects.create(
+                message = self.message1
+            )
+            equipement.delete()
+        else:
+            notification2 = NotificationManager(
+                message = self.message2
+            )
+            notification2.save()
+
+
+class NotificationManager(models.Model):
+    message = models.TextField(editable=False)
+
+class ReservedEquip(models.Model):
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         editable=False,

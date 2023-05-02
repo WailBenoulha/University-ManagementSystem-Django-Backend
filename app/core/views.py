@@ -9,66 +9,120 @@ from rest_framework.decorators import api_view
 import genericpath
 from rest_framework import generics
 
-class Categorie_EquipementViewSets(viewsets.ViewSet):
-    authentication_classes = ()
+class Categorie_EquipementApiView(APIView):
     serializer_class = serializers.Categorie_EquipementSerializer
     queryset = models.Categorie_Equipement.objects.all()
 
-    def list(self, request, pk=None):
+    def get(self, request, pk=None):
         if pk:
-            categ = models.Categorie_Equipement.objects.get(pk=pk)
-            serializer = serializers.Categorie_EquipementSerializer(categ)
+            try:
+                categorie = models.Categorie_Equipement.objects.get(pk=pk)
+            except models.Categorie_Equipement.DoesNotExist:
+                return Response(
+                    {
+                    'message' : 'the categorie that you tryna access is not exist'
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            serializer = serializers.Categorie_EquipementSerializer(categorie)
             return Response(serializer.data)
         else:
-            categ = models.Categorie_Equipement.objects.all()
-            serializer = serializers.Categorie_EquipementSerializer(categ, many=True)
+            categorie = models.Categorie_Equipement.objects.all()
+            serializer = serializers.Categorie_EquipementSerializer(categorie, many=True)
             return Response(serializer.data)
 
-    def create(self, request):
+    def post(self, request):
         serializer = self.serializer_class(data=request.data)
 
         if serializer.is_valid():
             serializer.save()
             return Response(
-                serializer.data,
-                status = status.HTTP_201_CREATED
+                {
+                'message' : 'categorie created successfully',
+                'the new categorie' : serializer.data
+                },
+                status= status.HTTP_201_CREATED
             )
         else:
             return Response(
-                serializer.errors,
+                {
+                'message' : 'categorie created failed! check your informations',
+                'errors' : serializer.errors
+                },
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-    def destroy(self, request, pk):
-        try:
-            categ = models.Categorie_Equipement.objects.get(pk=pk)
-        except models.Categorie_Equipement.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        categ.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    def put(self, request, pk=None):
+        if pk:
+            try:
+                categorie = models.Categorie_Equipement.objects.get(pk=pk)
+            except models.Categorie_Equipement.DoesNotExist:
+                return Response(
+                    {
+                    'message' : 'the categorie that you tryna access is not found'
+                    },
+                    status=status.HTTP_204_NO_CONTENT
+                )
 
-    def update(self, request, pk):
-        try:
-            categ = models.Categorie_Equipement.objects.get(pk=pk)
-        except models.Categorie_Equipement.DoesNotExist:
-            return Response(status=status.HTTP_204_NO_CONTENT)
-
-        serializer = serializers.Categorie_EquipementSerializer(categ, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'message': 'Your categorie equipement updated succesfully', 'Updated equipement':serializer.data})
+            serializer = serializers.Categorie_EquipementSerializer(categorie, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(
+                    {
+                    'message': 'the categorie updated successfully',
+                    'data': serializer.data
+                    },
+                    status=status.HTTP_202_ACCEPTED
+                )
+            else:
+                return Response(
+                    {
+                    'message': 'categorie failed updated! check your updated informations',
+                    'errors': serializer.errors
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
         else:
             return Response(
-                serializer.errors,
+                {
+                    'message' : 'You must provide the id number to update a loation'
+                },
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+    def delete(self, request, pk=None):
+        if pk:
+            try:
+                categorie = models.Categorie_Equipement.objects.get(pk=pk)
+            except models.Categorie_Equipement.DoesNotExist:
+                return Response(
+                    {
+                    'message' : 'the categorie that you tryna access is not exist'
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            categorie.delete()
+            return Response(
+                {
+                'message' : 'the categorie deleted successfuly'
+                },
+                status=status.HTTP_204_NO_CONTENT
+            )
+        else:
+            categorie = models.Categorie_Equipement.objects.all()
+            categorie.delete()
+            return Response(
+                {
+                'message' : 'all the categories deleted successfully'
+                },
+                status=status.HTTP_204_NO_CONTENT
+            )
 
-class LoacationViewSets(viewsets.ViewSet):
+class LoacationApiView(APIView):
     queryset = models.Location.objects.all()
     serializer_class = serializers.LocationSerializer
 
-    def list(self, request, pk=None):
+    def get(self, request, pk=None):
         if pk:
             try:
                 location = models.Location.objects.get(pk=pk)
@@ -86,7 +140,7 @@ class LoacationViewSets(viewsets.ViewSet):
             serializer = serializers.LocationSerializer(location, many=True)
             return Response(serializer.data)
 
-    def create(self, request):
+    def post(self, request):
         serializer = self.serializer_class(data=request.data)
 
         if serializer.is_valid():
@@ -107,52 +161,71 @@ class LoacationViewSets(viewsets.ViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-    def update(self, request, pk):
-        try:
-            location = models.Location.objects.get(pk=pk)
-        except models.Location.DoesNotExist:
-            return Response(
-               {
-                'message' : 'the location that you tryna access is not exist'
-               },
-               status=status.HTTP_404_NOT_FOUND
-            )
-        serializer = serializers.LocationSerializer(location, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(
-                {
-                'message' : 'location updated successfuly',
-                'location updated' : serializer.data
-                },
-                status=status.HTTP_202_ACCEPTED
-            )
+    def put(self, request, pk=None):
+        if pk:
+            try:
+                location = models.Location.objects.get(pk=pk)
+            except models.Location.DoesNotExist:
+                return Response(
+                    {
+                    'message' : 'the Location that you tryna access is not found'
+                    },
+                    status=status.HTTP_204_NO_CONTENT
+                )
+
+            serializer = serializers.LocationSerializer(location, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(
+                    {
+                    'message': 'the location updated successfully',
+                    'data': serializer.data
+                    },
+                    status=status.HTTP_202_ACCEPTED
+                )
+            else:
+                return Response(
+                    {
+                    'message': 'location failed updated! check your updated informations',
+                    'errors': serializer.errors
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
         else:
             return Response(
                 {
-                'message' : 'location updated failed',
-                'errors': serializer.errors
+                    'message' : 'You must provide the id number to update a loation'
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-    def delete(self, request, pk):
-        try:
-            location = models.Location.objects.get(pk=pk)
-        except models.Location.DoesNotExist:
+    def delete(self, request, pk=None):
+        if pk:
+            try:
+                location = models.Location.objects.get(pk=pk)
+            except models.Location.DoesNotExist:
+                return Response(
+                    {
+                    'message' : 'the Location that you tryna access is not exist'
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            location.delete()
             return Response(
                 {
-                'message' : 'the location that you tryna access is not exist'
+                'message' : 'the location deleted successfuly'
                 },
-                status=status.HTTP_404_NOT_FOUND
+                status=status.HTTP_204_NO_CONTENT
             )
-        location.delete()
-        return Response(
-            {
-            'message' : 'location deleted successfully'
-            },
-            status=status.HTTP_204_NO_CONTENT
-        )
+        else:
+            location = models.Location.objects.all()
+            location.delete()
+            return Response(
+                {
+                'message' : 'all the locations deleted successfully'
+                },
+                status=status.HTTP_204_NO_CONTENT
+            )
 
 
 class EquipementApiview(APIView):
@@ -532,3 +605,294 @@ class AllocationApiView(APIView):
                 status=status.HTTP_204_NO_CONTENT
             )
 
+class AllocateApiView(APIView):
+    queryset = models.Allocate.objects.all()
+    serializer_class = serializers.AllocateSerializer
+
+    def get(self, request, pk=None):
+        if pk:
+            try:
+                allocate = models.Allocate.objects.get(pk=pk)
+            except models.Allocate.DoesNotExist:
+                return Response(
+                    {
+                    'message' : 'the allocation opperation that you tryna access is not exist'
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            serializer = serializers.AllocateSerializer(allocate)
+            return Response(serializer.data)
+        else:
+            allocate = models.Allocate.objects.all()
+            serializer = serializers.AllocateSerializer(allocate, many=True)
+            return Response(serializer.data)
+
+    def post(self, request):
+        serializer = serializers.AllocateSerializer(data=request.data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {
+                'messge' : 'new allocation request created successfuly wait until the admin accept',
+                'new_request_allocation' : serializer.data
+                },
+                status=status.HTTP_201_CREATED
+            )
+        else:
+            return Response(
+                {
+                'message' : 'Allocation request failed',
+                'errors' : serializer.errors
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def delete(self, request, pk=None):
+        if pk:
+            try:
+                allocation = models.Allocate.objects.get(pk=pk)
+            except models.Allocate.DoesNotExist:
+                return Response(
+                    {
+                    'message' : 'the allocation request that you tryna access is not exist'
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            allocation.delete()
+            return Response(
+                {
+                'message' : 'the allocation request deleted successfuly'
+                },
+                status=status.HTTP_204_NO_CONTENT
+            )
+        else:
+            allocation = models.Allocate.objects.all()
+            allocation.delete()
+            return Response(
+                {
+                'message' : 'all the allocations requestes deleted successfully'
+                },
+                status=status.HTTP_204_NO_CONTENT
+            )
+
+class NotificationStudentApiView(APIView):
+    queryset = models.NotificationStudent.objects.all()
+    serializer_class = serializers.NotificaionStudentSerializer
+
+    def get(self, request, pk=None):
+        if pk:
+            try:
+                notif = models.NotificationStudent.objects.get(pk=pk)
+            except models.NotificationStudent.DoesNotExist:
+                return Response(
+                    {
+                    'message' : 'the notification that you tryna access is not exist'
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            serializer = serializers.NotificaionStudentSerializer(notif)
+            return Response(serializer.data)
+        else:
+            notif = models.NotificationStudent.objects.all()
+            serializer = serializers.NotificaionStudentSerializer(notif, many=True)
+            return Response(serializer.data)
+
+    def delete(self, request, pk=None):
+        if pk:
+            try:
+                notif = models.NotificationStudent.objects.get(pk=pk)
+            except models.Allocate.DoesNotExist:
+                return Response(
+                    {
+                    'message' : 'the notification that you tryna access is not exist'
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            notif.delete()
+            return Response(
+                {
+                'message' : 'the notification deleted successfuly'
+                },
+                status=status.HTTP_204_NO_CONTENT
+            )
+        else:
+            notif = models.NotificationStudent.objects.all()
+            notif.delete()
+            return Response(
+                {
+                'message' : 'all the notifications deleted successfully'
+                },
+                status=status.HTTP_204_NO_CONTENT
+            )
+
+class AcceptrequestApiView(APIView):
+    queryset = models.Acceptrequest.objects.all()
+    serializer_class = serializers.AcceptrequestSerializer
+
+    def get(self, request, pk=None):
+        if pk:
+            try:
+                notif = models.Acceptrequest.objects.get(pk=pk)
+            except models.Acceptrequest.DoesNotExist:
+                return Response(
+                    {
+                    'message' : 'the request that you tryna access is not exist'
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            serializer = serializers.AcceptrequestSerializer(notif)
+            return Response(serializer.data)
+        else:
+            notif = models.Acceptrequest.objects.all()
+            serializer = serializers.AcceptrequestSerializer(notif, many=True)
+            return Response(serializer.data)
+
+    def post(self, request):
+        serializer = serializers.AcceptrequestSerializer(data=request.data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {
+                'message' : 'opperation succed'
+                },
+                serializer.data,
+                status=status.HTTP_201_CREATED
+            )
+        else:
+            return Response(
+                {
+                'message' : 'check your invalid information'
+                },
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def delete(self, request, pk=None):
+        if pk:
+            try:
+                notif = models.Acceptrequest.objects.get(pk=pk)
+            except models.Acceptrequest.DoesNotExist:
+                return Response(
+                    {
+                    'message' : 'the opperation that you tryna access is not exist'
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            notif.delete()
+            return Response(
+                {
+                'message' : 'the opperation deleted successfuly'
+                },
+                status=status.HTTP_204_NO_CONTENT
+            )
+        else:
+            notif = models.Acceptrequest.objects.all()
+            notif.delete()
+            return Response(
+                {
+                'message' : 'all the opperation deleted successfully'
+                },
+                status=status.HTTP_204_NO_CONTENT
+            )
+
+class NotificationManagerApiView(APIView):
+    queryset = models.NotificationManager.objects.all()
+    serializer_class = serializers.NotificationManagerSerializer
+
+    def get(self, request, pk=None):
+        if pk:
+            try:
+                notif = models.NotificationManager.objects.get(pk=pk)
+            except models.NotificationManager.DoesNotExist:
+                return Response(
+                    {
+                    'message' : 'the notification that you tryna access is not exist'
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            serializer = serializers.NotificationManagerSerializer(notif)
+            return Response(serializer.data)
+        else:
+            notif = models.NotificationManager.objects.all()
+            serializer = serializers.NotificationManagerSerializer(notif, many=True)
+            return Response(serializer.data)
+
+    def delete(self, request, pk=None):
+        if pk:
+            try:
+                notif = models.NotificationManager.objects.get(pk=pk)
+            except models.NotificationManager.DoesNotExist:
+                return Response(
+                    {
+                    'message' : 'the notification that you tryna access is not exist'
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            notif.delete()
+            return Response(
+                {
+                'message' : 'the notification deleted successfuly'
+                },
+                status=status.HTTP_204_NO_CONTENT
+            )
+        else:
+            notif = models.NotificationManager.objects.all()
+            notif.delete()
+            return Response(
+                {
+                'message' : 'all the notifications deleted successfully'
+                },
+                status=status.HTTP_204_NO_CONTENT
+            )
+
+class ReservedEquipApiView(APIView):
+    queryset = models.ReservedEquip.objects.all()
+    serializer_class = serializers.ReservedEquipSerializer
+
+    def get(self, request, pk=None):
+        if pk:
+            try:
+                allocation = models.ReservedEquip.objects.get(pk=pk)
+            except models.ReservedEquip.DoesNotExist:
+                return Response(
+                    {
+                    'message' : 'the equipement that you tryna access is not exist'
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            serializer = serializers.ReservedEquipSerializer(allocation)
+            return Response(serializer.data)
+        else:
+            allocation = models.ReservedEquip.objects.all()
+            serializer = serializers.ReservedEquipSerializer(allocation, many=True)
+            return Response(serializer.data)
+
+    def delete(self, request, pk=None):
+        if pk:
+            try:
+                allocation = models.ReservedEquip.objects.get(pk=pk)
+            except models.ReservedEquip.DoesNotExist:
+                return Response(
+                    {
+                    'message' : 'the equipement that you tryna access is not exist'
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            allocation.delete()
+            return Response(
+                {
+                'message' : 'the equipement deleted successfuly in the ITroom'
+                },
+                status=status.HTTP_204_NO_CONTENT
+            )
+        else:
+            allocation = models.ReservedEquip.objects.all()
+            allocation.delete()
+            return Response(
+                {
+                'message' : 'all the equipements deleted successfully in the ITroom'
+                },
+                status=status.HTTP_204_NO_CONTENT
+            )
