@@ -454,38 +454,50 @@ class Acceptrequest(models.Model):
     message2 = models.TextField(editable=False, default='')
 
     def save(self, *args, **kwargs):
-        self.message1 = f"the Admin accept your request"
-        self.message2 = f"the Admin refuse your request"
+        self.message1 = f"the Admin accept your request to allocate {self.Allocation_request.reference}"
+        self.message2 = f"the Admin refuse your request to allocate {self.Allocation_request.reference}"
         super().save(*args, **kwargs)
 
         if self.accept == True:
-            allocation_ref = self.Allocation_request.reference
-            equipement = Allocation.objects.get(reference=allocation_ref)
-            reserved_equipement = ReservedEquip.objects.create(
-                created_by = equipement.created_by,
-                name = equipement.name,
-                brand = equipement.brand,
-                model = equipement.model,
-                categorie = equipement.categorie,
-                reference = equipement.reference,
-                num_serie = equipement.num_serie,
-                condition = equipement.condition,
-                facture_number = equipement.facture_number,
-                date_purchase = equipement.date_purchase,
-                Location = equipement.Location,
-                date_assignment =equipement.date_assignment,
-                discription = equipement.discription,
-                image = equipement.image
-            )
-            notification = NotificationManager.objects.create(
-                message = self.message1
-            )
-            equipement.delete()
+            try:
+                notificationtd = self.Allocation_request
+                allocation_ref = notificationtd.reference
+                equipement = Allocation.objects.get(reference=allocation_ref)
+                reserved_equipement = ReservedEquip(
+                    created_by = equipement.created_by,
+                    name = equipement.name,
+                    brand = equipement.brand,
+                    model = equipement.model,
+                    categorie = equipement.categorie,
+                    reference = equipement.reference,
+                    num_serie = equipement.num_serie,
+                    condition = equipement.condition,
+                    facture_number = equipement.facture_number,
+                    date_purchase = equipement.date_purchase,
+                    Location = equipement.Location,
+                    date_assignment =equipement.date_assignment,
+                    discription = equipement.discription,
+                    image = equipement.image
+                )
+                notification = NotificationManager(
+                    message = self.message1
+                )
+                notification.save()
+                reserved_equipement.save()
+                equipement.delete()
+                notificationtd.delete()
+            except NotificationStudent.DoesNotExist:
+                pass
         else:
-            notification2 = NotificationManager(
-                message = self.message2
-            )
-            notification2.save()
+            try:
+                notificationstd = NotificationStudent.objects.get(id=self.id)
+                notification2 = NotificationManager(
+                    message = self.message2
+                )
+                notification2.save()
+                notificationstd.delete()
+            except NotificationStudent.DoesNotExist:
+                pass
 
 
 class NotificationManager(models.Model):

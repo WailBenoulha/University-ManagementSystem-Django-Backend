@@ -755,18 +755,17 @@ class AcceptrequestApiView(APIView):
             serializer.save()
             return Response(
                 {
-                'message' : 'opperation succed'
+                'message' : 'opperation succed',
+                'data' : serializer.data
                 },
-                serializer.data,
-                status=status.HTTP_201_CREATED
+                status=status.HTTP_200_OK
             )
         else:
             return Response(
                 {
                 'message' : 'check your invalid information'
                 },
-                serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST
+                serializer.errors
             )
 
     def delete(self, request, pk=None):
