@@ -81,10 +81,6 @@ class Categorie_Equipement(models.Model):
         return self.name
 
 class Location(models.Model):
-    Id_admin = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE
-    )
     name = models.CharField(max_length=255, unique=True)
     discription = models.TextField()
     LECTURE_HALLS  = 'lecture_halls'

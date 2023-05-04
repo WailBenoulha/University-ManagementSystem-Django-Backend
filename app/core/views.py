@@ -737,7 +737,7 @@ class AcceptrequestApiView(APIView):
             except models.Acceptrequest.DoesNotExist:
                 return Response(
                     {
-                    'message' : 'the request that you tryna access is not exist'
+                    'message' : 'the request that you tryna access does not exist'
                     },
                     status=status.HTTP_404_NOT_FOUND
                 )
@@ -750,7 +750,6 @@ class AcceptrequestApiView(APIView):
 
     def post(self, request):
         serializer = serializers.AcceptrequestSerializer(data=request.data)
-
         if serializer.is_valid():
             serializer.save()
             return Response(
