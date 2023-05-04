@@ -630,23 +630,31 @@ class AllocateApiView(APIView):
     def post(self, request):
         serializer = serializers.AllocateSerializer(data=request.data)
 
-        if serializer.is_valid():
-            serializer.save()
+        if request.data.get('reference') is None:
             return Response(
                 {
-                'messge' : 'new allocation request created successfuly wait until the admin accept',
-                'new_request_allocation' : serializer.data
-                },
-                status=status.HTTP_201_CREATED
-            )
-        else:
-            return Response(
-                {
-                'message' : 'Allocation request failed',
-                'errors' : serializer.errors
+                    'meassage' : 'there is no equipement to allocate'
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
+        else:
+            if serializer.is_valid():
+                serializer.save()
+                return Response(
+                    {
+                    'messge' : 'new allocation request created successfuly wait until the admin accept',
+                    'new_request_allocation' : serializer.data
+                    },
+                    status=status.HTTP_201_CREATED
+                )
+            else:
+                return Response(
+                    {
+                    'message' : 'Allocation request failed',
+                    'errors' : serializer.errors
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
     def delete(self, request, pk=None):
         if pk:
@@ -762,9 +770,10 @@ class AcceptrequestApiView(APIView):
         else:
             return Response(
                 {
-                'message' : 'check your invalid information'
+                'message' : 'you dont have any allocation request to accept or refuse wait til someone request an allocation',
+                'error' : serializer.errors
                 },
-                serializer.errors
+                status=status.HTTP_400_BAD_REQUEST
             )
 
     def delete(self, request, pk=None):
