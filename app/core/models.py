@@ -416,8 +416,8 @@ class Allocate(models.Model):
         to_field='reference',
         on_delete=models.CASCADE
     )
-    start_date = models.DateTimeField()
-    finish_date = models.DateTimeField()
+    start_date = models.DateField()
+    finish_date = models.DateField()
     purpose = models.TextField(max_length=255, default='')
     Message = models.TextField(editable=False)
 

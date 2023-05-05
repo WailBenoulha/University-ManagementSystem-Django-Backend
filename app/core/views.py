@@ -8,6 +8,11 @@ from django.http import Http404
 from rest_framework.decorators import api_view
 import genericpath
 from rest_framework import generics
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.settings import api_settings
+
+class UserLoginApiView(ObtainAuthToken):
+    renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
 
 class Categorie_EquipementApiView(APIView):
     serializer_class = serializers.Categorie_EquipementSerializer
@@ -31,26 +36,32 @@ class Categorie_EquipementApiView(APIView):
             serializer = serializers.Categorie_EquipementSerializer(categorie, many=True)
             return Response(serializer.data)
 
-    def post(self, request):
+    def post(self, request, pk=None):
         serializer = self.serializer_class(data=request.data)
-
-        if serializer.is_valid():
-            serializer.save()
-            return Response(
+        if pk: return Response(
                 {
-                'message' : 'categorie created successfully',
-                'the new categorie' : serializer.data
-                },
-                status= status.HTTP_201_CREATED
-            )
-        else:
-            return Response(
-                {
-                'message' : 'categorie created failed! check your informations',
-                'errors' : serializer.errors
+                    'message' : 'you can t create a new equipement inside this equipement you have to move into the general list to create here youve only update'
                 },
                 status=status.HTTP_400_BAD_REQUEST
-            )
+        )
+        else:
+            if serializer.is_valid():
+                serializer.save()
+                return Response(
+                    {
+                    'message' : 'categorie created successfully',
+                    'the new categorie' : serializer.data
+                    },
+                    status= status.HTTP_201_CREATED
+                )
+            else:
+                return Response(
+                    {
+                    'message' : 'categorie created failed! check your informations',
+                    'errors' : serializer.errors
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
     def put(self, request, pk=None):
         if pk:
@@ -70,7 +81,7 @@ class Categorie_EquipementApiView(APIView):
                 return Response(
                     {
                     'message': 'the categorie updated successfully',
-                    'data': serializer.data
+                    'updated equipement': serializer.data
                     },
                     status=status.HTTP_202_ACCEPTED
                 )
@@ -140,26 +151,33 @@ class LoacationApiView(APIView):
             serializer = serializers.LocationSerializer(location, many=True)
             return Response(serializer.data)
 
-    def post(self, request):
+    def post(self, request, pk=None):
         serializer = self.serializer_class(data=request.data)
 
-        if serializer.is_valid():
-            serializer.save()
-            return Response(
+        if pk: return Response(
                 {
-                'message' : 'location created successfully',
-                'the new location' : serializer.data
-                },
-                status= status.HTTP_201_CREATED
-            )
-        else:
-            return Response(
-                {
-                'message' : 'location created failed! check your informations',
-                'errors' : serializer.errors
+                    'message' : 'you can t create a new equipement inside this equipement you have to move into the general list to create here youve only update'
                 },
                 status=status.HTTP_400_BAD_REQUEST
-            )
+        )
+        else:
+            if serializer.is_valid():
+                serializer.save()
+                return Response(
+                    {
+                    'message' : 'location created successfully',
+                    'the new location' : serializer.data
+                    },
+                    status= status.HTTP_201_CREATED
+                )
+            else:
+                return Response(
+                    {
+                    'message' : 'location created failed! check your informations',
+                    'errors' : serializer.errors
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
     def put(self, request, pk=None):
         if pk:

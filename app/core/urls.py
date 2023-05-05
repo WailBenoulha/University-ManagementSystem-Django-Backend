@@ -4,6 +4,7 @@ from core import views
 
 
 urlpatterns = [
+    path('login/', views.UserLoginApiView.as_view()),
     path('stock/', views.StockApiView.as_view()),
     path('stock/<int:pk>/', views.StockApiView.as_view()),
     path('affectation', views.AffectationApiView.as_view()),
