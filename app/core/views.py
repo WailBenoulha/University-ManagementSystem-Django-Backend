@@ -921,3 +921,60 @@ class ReservedEquipApiView(APIView):
                 },
                 status=status.HTTP_204_NO_CONTENT
             )
+
+class ReturnEquipementApiview(APIView):
+    queryset = models.ReturnEquipement.objects.all()
+    serializer_class = serializers.ReturnEquipementSerializer
+
+    def get(self, request, pk=None):
+        if pk:
+            try:
+                equip = models.ReturnEquipement.objects.get(pk=pk)
+            except models.ReturnEquipement.DoesNotExist:
+                return Response(
+                    {
+                    'message' : 'the opperation that you tryna access is not exist'
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            serializer = serializers.ReturnEquipementSerializer(equip)
+            return Response(serializer.data)
+        else:
+            equip = models.ReturnEquipement.objects.all()
+            serializer = serializers.ReturnEquipementSerializer(equip, many=True)
+            return Response(serializer.data)
+
+    def post(self, request, pk=None):
+        serializer = self.serializer_class(data=request.data)
+        if pk: return Response(
+                {
+                    'message' : 'opperation invalid'
+                },
+                status=status.HTTP_400_BAD_REQUEST
+        )
+        else:
+            if request.data.get('Equipement') is None:
+                return Response(
+                {
+                    'meassage' : 'there is no reserved equipement to return'
+                },
+                status=status.HTTP_400_BAD_REQUEST
+                )
+            else:
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response(
+                        {
+                        'message' : 'Reserved Equipement returned successfully to ITroom',
+                        'opperation' : serializer.data
+                        },
+                        status= status.HTTP_201_CREATED
+                    )
+                else:
+                    return Response(
+                        {
+                        'message' : 'opperation invalid',
+                        'errors' : serializer.errors
+                        },
+                        status=status.HTTP_400_BAD_REQUEST
+                    )

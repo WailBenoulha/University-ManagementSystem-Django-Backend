@@ -28,5 +28,7 @@ urlpatterns = [
     path('acceptrequest/', views.AcceptrequestApiView.as_view()),
     path('acceptrequest/<int:pk>/', views.AcceptrequestApiView.as_view()),
     path('reservedequip/', views.ReservedEquipApiView.as_view()),
-    path('reservedequip/<int:pk>/', views.ReservedEquipApiView.as_view())
+    path('reservedequip/<int:pk>/', views.ReservedEquipApiView.as_view()),
+    path('returnequipement/', views.ReturnEquipementApiview.as_view()),
+    path('returnequipement/<int:pk>/', views.ReturnEquipementApiview.as_view())
 ]

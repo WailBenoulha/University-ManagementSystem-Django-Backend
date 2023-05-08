@@ -2,7 +2,7 @@ import datetime
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
-from django.contrib.auth.models import BaseUserManager
+from django.contrib.auth.models import BaseUserManager, Group
 from django.conf import settings
 import random
 from django.utils import timezone
@@ -14,26 +14,27 @@ from django.core.validators import RegexValidator
 
 
 class AdminProfileManager(BaseUserManager):
-    def create_user(self, email, name, lastname, phonenumber, national_card_number, address, role, password=None):
+    def create_user(self, email, password=None, **extra_fields):
         if not email:
             raise ValueError('User Must have an email address')
 
         email = self.normalize_email(email)
-        user = self.model(email=email, name=name, lastname=lastname, phonenumber=phonenumber, national_card_number=national_card_number, address=address, role=role)
-
+        user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
 
         return user
 
-    def create_superuser(self, email, name, lastname, phonenumber, national_card_number, address, role, password):
-        user = self.create_user(email, name, lastname, phonenumber, national_card_number, address, role, password)
+    def create_superuser(self, email, password, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
 
-        user.is_superuser = True
-        user.is_staff = True
-        user.save(using=self._db)
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser must have is_staff=True.')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser must have is_superuser=True.')
 
-        return user
+        return self.create_user(email, password, **extra_fields)
 
 class AdminProfile(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(max_length=255, unique=True)
@@ -46,13 +47,21 @@ class AdminProfile(AbstractBaseUser, PermissionsMixin):
     phonenumber = models.CharField(validators = [phone_regex], max_length=20)
     national_card_number = models.IntegerField()
     address = models.CharField(max_length=255)
-    ROLE_CHOICES = (
-        ('admin', 'Admin'),
-    )
-    role = models.CharField(choices=ROLE_CHOICES ,max_length=255, default='admin')
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
-
+    ADMIN = 'admin'
+    PRINCIPAL_MANAGER = 'principal_manager'
+    ALLOCATION_MANAGER = 'allocation_manager'
+    STUDENT = 'student'
+    RESEARCHER = 'researcher'
+    ROLE_CHOICES = [
+        (ADMIN,'admin'),
+        (PRINCIPAL_MANAGER,'principal_manager'),
+        (ALLOCATION_MANAGER,'allocation_manager'),
+        (STUDENT,'student'),
+        (RESEARCHER,'researcher')
+    ]
+    role = models.CharField(choices=ROLE_CHOICES, max_length=255, default='admin', editable=False)
     objects = AdminProfileManager()
 
     USERNAME_FIELD = 'email'
@@ -266,7 +275,7 @@ class Affectation(models.Model):
         self.opperation = f"The equipment {self.reference.name} {self.reference.brand} {self.reference.model} {self.reference.reference} affected to the location {self.Location.name}"
         super().save(*args, **kwargs)
 
-        if self.Location.type == 'it_room':
+        if self.Location.type == 'reservation_room':
             ref = self.reference
             equipement = Equipement.objects.get(id=ref.id) #hna ta9der tbdel reference w t3awedha bl id 3la 7sab wach rah tconsulte
             inventory_equipement = Inventory(
@@ -539,3 +548,33 @@ class ReservedEquip(models.Model):
 
     def __srt__(self):
         return self.reference
+
+class ReturnEquipement(models.Model):
+    Equipement = models.OneToOneField(
+        ReservedEquip,
+        to_field='reference',
+        on_delete=models.CASCADE,
+        verbose_name="Equipment"
+    )
+
+    def save(self, *args, **kwargs):
+        ref = self.Equipement
+        equipement = ReservedEquip.objects.get(reference=ref)
+        reserved_equipement = Allocation(
+            created_by = equipement.created_by,
+            name = equipement.name,
+            brand = equipement.brand,
+            model = equipement.model,
+            categorie = equipement.categorie,
+            reference = equipement.reference,
+            num_serie = equipement.num_serie,
+            condition = equipement.condition,
+            facture_number = equipement.facture_number,
+            date_purchase = equipement.date_purchase,
+            Location = equipement.Location,
+            date_assignment =equipement.date_assignment,
+            discription = equipement.discription,
+            image = equipement.image
+        )
+        reserved_equipement.save()
+        equipement.delete()
