@@ -1,13 +1,27 @@
-python==3.11.0
 antiorm==1.2.1
 asgiref==3.6.0
+certifi==2022.12.7
+charset-normalizer==3.1.0
 db==0.1.1
-db-sqlite3==0.0.1
-Django==4.2
-djangorestframework==3.14.0
 Pillow==9.5.0
 pytz==2023.3
 sqlparse==0.4.4
 tzdata==2023.3
+filelock==3.9.0
+idna==3.4
+mysql-connector-python==8.0.33
+mysqlclient==2.1.1
+optional-django==0.3.0
+pipenv==2023.2.18
+platformdirs==3.0.0
+protobuf==3.20.3
+react==4.3.0
+requests==2.30.0
+sqlparse==0.4.3
+tzdata==2023.3
+urllib3==2.0.2
+vboxapi==1.0
+virtualenv==20.19.0
+virtualenv-clone==0.5.7
 
 # pip install -r requirements.txt

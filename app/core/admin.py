@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from core import models
 
-admin.site.register(models.AdminProfile)
+admin.site.register(models.User)
 admin.site.register(models.Categorie_Equipement)
 admin.site.register(models.Location)
 admin.site.register(models.Equipement)

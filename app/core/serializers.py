@@ -1,7 +1,107 @@
-from datetime import timezone
-from django.forms import ValidationError
 from rest_framework import serializers
 from core import models
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.User
+        fields = ('id','password', 'email', 'name', 'lastname', 'phonenumber', 'national_card_number', 'address', 'role')
+
+
+class AdminSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.User
+        fields = ('id','password', 'email', 'name', 'lastname', 'phonenumber', 'national_card_number', 'address')
+
+    def create(self, validated_data):
+        user = models.User.objects.create_user(
+            role='ADMIN',
+            password=validated_data['password'],
+            email=validated_data['email'],
+            name=validated_data['name'],
+            lastname=validated_data['lastname'],
+            phonenumber=validated_data['phonenumber'],
+            national_card_number=validated_data['national_card_number'],
+            address=validated_data['address']
+        )
+
+        return user
+
+
+class PrincipalmanagerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.User
+        fields = ('id','password', 'email', 'name', 'lastname', 'phonenumber', 'national_card_number', 'address')
+
+    def create(self, validated_data):
+        user = models.User.objects.create_user(
+            role='PRINCIPALMANAGER',
+            password=validated_data['password'],
+            email=validated_data['email'],
+            name=validated_data['name'],
+            lastname=validated_data['lastname'],
+            phonenumber=validated_data['phonenumber'],
+            national_card_number=validated_data['national_card_number'],
+            address=validated_data['address']
+        )
+
+        return user
+
+class AllocationmanagerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.User
+        fields = ('id','password', 'email', 'name', 'lastname', 'phonenumber', 'national_card_number', 'address')
+
+    def create(self, validated_data):
+        user = models.User.objects.create_user(
+            role='ALLOCATIONMANAGER',
+            password=validated_data['password'],
+            email=validated_data['email'],
+            name=validated_data['name'],
+            lastname=validated_data['lastname'],
+            phonenumber=validated_data['phonenumber'],
+            national_card_number=validated_data['national_card_number'],
+            address=validated_data['address']
+        )
+
+        return user
+
+class StudentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.User
+        fields = ('id','password', 'email', 'name', 'lastname', 'phonenumber', 'national_card_number', 'address')
+
+    def create(self, validated_data):
+        user = models.User.objects.create_user(
+            role='STUDENT',
+            password=validated_data['password'],
+            email=validated_data['email'],
+            name=validated_data['name'],
+            lastname=validated_data['lastname'],
+            phonenumber=validated_data['phonenumber'],
+            national_card_number=validated_data['national_card_number'],
+            address=validated_data['address']
+        )
+
+        return user
+
+class ResearcherSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.User
+        fields = ('id','password', 'email', 'name', 'lastname', 'phonenumber', 'national_card_number', 'address')
+
+    def create(self, validated_data):
+        user = models.User.objects.create_user(
+            role='RESEARCHER',
+            password=validated_data['password'],
+            email=validated_data['email'],
+            name=validated_data['name'],
+            lastname=validated_data['lastname'],
+            phonenumber=validated_data['phonenumber'],
+            national_card_number=validated_data['national_card_number'],
+            address=validated_data['address']
+        )
+
+        return user
 
 
 class Categorie_EquipementSerializer(serializers.ModelSerializer):
@@ -18,7 +118,7 @@ class LocationSerializer(serializers.ModelSerializer):
 class EquipementSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Equipement
-        fields = ('id', 'created_by', 'name', 'brand', 'model', 'categorie', 'reference', 'num_serie', 'condition', 'facture_number', 'date_purchase', 'Location', 'date_assignment','discription', 'image')
+        fields = ('id', 'created_by', 'name', 'brand', 'model', 'categorie', 'reference', 'num_serie', 'condition', 'facture_number', 'date_purchase', 'Location', 'date_assignment','discription', 'image', 'is_reserved')
 
 class StockSerializer(serializers.ModelSerializer):
     class Meta:
@@ -33,12 +133,12 @@ class AffectationSerializer(serializers.ModelSerializer):
 class InventorySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Inventory
-        fields = ('id', 'created_by', 'name', 'brand', 'model', 'categorie', 'reference', 'num_serie', 'condition', 'facture_number', 'date_purchase', 'Location', 'date_assignment','discription', 'image')
+        fields = ('id', 'created_by', 'name', 'brand', 'model', 'categorie', 'reference', 'num_serie', 'condition', 'facture_number', 'date_purchase', 'Location', 'date_assignment','discription', 'image', 'is_reserved')
 
 class AllocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Allocation
-        fields = ('id', 'created_by', 'name', 'brand', 'model', 'categorie', 'reference', 'num_serie', 'condition', 'facture_number', 'date_purchase', 'Location', 'date_assignment','discription', 'image')
+        fields = ('id', 'created_by', 'name', 'brand', 'model', 'categorie', 'reference', 'num_serie', 'condition', 'facture_number', 'date_purchase', 'Location', 'date_assignment','discription', 'image', 'is_reserved')
 
 class AllocateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -63,7 +163,7 @@ class NotificationManagerSerializer(serializers.ModelSerializer):
 class ReservedEquipSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Allocation
-        fields = ('id', 'created_by', 'name', 'brand', 'model', 'categorie', 'reference', 'num_serie', 'condition', 'facture_number', 'date_purchase', 'Location', 'date_assignment','discription', 'image')
+        fields = ('id', 'created_by', 'name', 'brand', 'model', 'categorie', 'reference', 'num_serie', 'condition', 'facture_number', 'date_purchase', 'Location', 'date_assignment','discription', 'image', 'is_reserved')
 
 class ReturnEquipementSerializer(serializers.ModelSerializer):
     class Meta:

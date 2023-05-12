@@ -1,18 +1,45 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
-from rest_framework import viewsets
+from rest_framework import status, generics
 from core import serializers
 from core import models
 from django.http import Http404
 from rest_framework.decorators import api_view
 import genericpath
 from rest_framework import generics
+from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.settings import api_settings
+from rest_framework.authentication import TokenAuthentication
+from rest_framework import viewsets
+
+class UserViewsets(viewsets.ModelViewSet):
+    serializer_class = serializers.UserSerializer
+    queryset = models.User.objects.all()
+
+class AdminViewsets(viewsets.ModelViewSet):
+    serializer_class = serializers.AdminSerializer
+    queryset = models.User.objects.filter(role='Admin')
+
+class PrincipalmanagerViewsets(viewsets.ModelViewSet):
+    serializer_class = serializers.PrincipalmanagerSerializer
+    queryset = models.User.objects.filter(role='Principalmanager')
+
+class AllocationmanagerViewsets(viewsets.ModelViewSet):
+    serializer_class = serializers.AllocationmanagerSerializer
+    queryset = models.User.objects.filter(role='Allocationmanager')
+
+class StudentViewsets(viewsets.ModelViewSet):
+    serializer_class = serializers.StudentSerializer
+    queryset = models.User.objects.filter(role='Student')
+
+class ResearcherViewsets(viewsets.ModelViewSet):
+    serializer_class = serializers.ResearcherSerializer
+    queryset = models.User.objects.filter(role='Researcher')
 
 class UserLoginApiView(ObtainAuthToken):
     renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
+
 
 class Categorie_EquipementApiView(APIView):
     serializer_class = serializers.Categorie_EquipementSerializer
@@ -38,12 +65,13 @@ class Categorie_EquipementApiView(APIView):
 
     def post(self, request, pk=None):
         serializer = self.serializer_class(data=request.data)
-        if pk: return Response(
+        if pk:
+            return Response(
                 {
-                    'message' : 'you can t create a new equipement inside this equipement you have to move into the general list to create here youve only update'
+                    'message' : 'you cant add a new categorie inside this categorie you gotta move to the general page'
                 },
                 status=status.HTTP_400_BAD_REQUEST
-        )
+            )
         else:
             if serializer.is_valid():
                 serializer.save()
@@ -81,7 +109,7 @@ class Categorie_EquipementApiView(APIView):
                 return Response(
                     {
                     'message': 'the categorie updated successfully',
-                    'updated equipement': serializer.data
+                    'data': serializer.data
                     },
                     status=status.HTTP_202_ACCEPTED
                 )
@@ -154,12 +182,13 @@ class LoacationApiView(APIView):
     def post(self, request, pk=None):
         serializer = self.serializer_class(data=request.data)
 
-        if pk: return Response(
+        if pk:
+            return Response(
                 {
-                    'message' : 'you can t create a new equipement inside this equipement you have to move into the general list to create here youve only update'
+                    'message' : 'you cant add a new location inside this existing location you gotta move to the general page'
                 },
                 status=status.HTTP_400_BAD_REQUEST
-        )
+            )
         else:
             if serializer.is_valid():
                 serializer.save()
@@ -204,7 +233,7 @@ class LoacationApiView(APIView):
             else:
                 return Response(
                     {
-                    'message': 'location failed updated! check your updated informations',
+                    'message': 'location fail to update! check your updated informations',
                     'errors': serializer.errors
                     },
                     status=status.HTTP_400_BAD_REQUEST
@@ -358,23 +387,30 @@ class StockApiView(APIView):
 
     def post(self, request):
         serializer = serializers.StockSerializer(data=request.data)
-
-        if serializer.is_valid():
-            serializer.save()
-            return Response(
-                {
-                'messge' : 'new equipement created successfuly',
-                'new equipement' : serializer.data
-                },
-                status=status.HTTP_201_CREATED
-            )
+        if models.Location.objects.filter(type='stocks').exists():
+            if serializer.is_valid():
+                serializer.save()
+                return Response(
+                    {
+                    'messge' : 'new equipement created successfuly',
+                    'new equipement' : serializer.data
+                    },
+                    status=status.HTTP_201_CREATED
+                )
+            else:
+                return Response(
+                    {
+                    'message' : 'Equipement field created',
+                    'errors' : serializer.errors
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
         else:
             return Response(
                 {
-                'message' : 'Equipement field created',
-                'errors' : serializer.errors
+                    'message' : 'there is no stock in locations wait until the admin create it'
                 },
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_404_NOT_FOUND
             )
 
     def delete(self, request, pk=None):
@@ -547,24 +583,33 @@ class InventoryApiView(APIView):
                 )
 
             serializer = serializers.InventorySerializer(equipement, data=request.data, partial=True)
-            if serializer.is_valid():
-                # Update only the condition field
-                equipement.condition = serializer.validated_data['condition']
-                equipement.save()
+            condition = request.data.get('condition')
+            if condition == 'new':
                 return Response(
                     {
-                        'message': 'the equipement updated successfully'
+                        'message' : 'You cant update the condition to <new>! the condition <new> only defined automatically on stock'
                     },
-                    status=status.HTTP_202_ACCEPTED
-                )
-            else:
-                return Response(
-                    {
-                        'message': 'equipement field update! check your updated informations'
-                    },
-                    serializer.errors,
                     status=status.HTTP_400_BAD_REQUEST
                 )
+            else:
+                if serializer.is_valid():
+                    # Update only the condition field
+                    equipement.condition = serializer.validated_data['condition']
+                    equipement.save()
+                    return Response(
+                        {
+                            'message': 'the equipement updated successfully'
+                        },
+                        status=status.HTTP_202_ACCEPTED
+                    )
+                else:
+                    return Response(
+                        {
+                            'message': 'equipement field update! check your updated informations'
+                        },
+                        serializer.errors,
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
         else:
             return Response(
                 {
