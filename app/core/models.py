@@ -74,11 +74,6 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 class Categorie_Equipement(models.Model):
-    Id_admin = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        related_name='Categorie',
-        on_delete=models.CASCADE
-    )
     name = models.CharField(max_length=40, unique=True)
     discription = models.CharField(max_length=250)
     created_on = models.DateTimeField(auto_now_add=True)

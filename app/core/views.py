@@ -11,7 +11,11 @@ from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.settings import api_settings
 from rest_framework.authentication import TokenAuthentication
+from core import permissions
 from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
+from core.permissions import IsResearcher, IsAdmin, IsAllocationManager, IsPrincipalManager, IsStudent, IsAdminOrIsStudent, IsAdminOrIsAllocationManager, IsAdminOrIsPrincipalManager, IsAdminOrIsResearcher, IsAllocationManagerOrIsStudentOrIsResearcher, IsStudentOrResearcher
+from rest_framework.decorators import permission_classes
 
 class UserViewsets(viewsets.ModelViewSet):
     serializer_class = serializers.UserSerializer
@@ -20,6 +24,8 @@ class UserViewsets(viewsets.ModelViewSet):
 class AdminViewsets(viewsets.ModelViewSet):
     serializer_class = serializers.AdminSerializer
     queryset = models.User.objects.filter(role='Admin')
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (permissions.UpdateOwnProfile,)
 
 class PrincipalmanagerViewsets(viewsets.ModelViewSet):
     serializer_class = serializers.PrincipalmanagerSerializer
@@ -32,18 +38,33 @@ class AllocationmanagerViewsets(viewsets.ModelViewSet):
 class StudentViewsets(viewsets.ModelViewSet):
     serializer_class = serializers.StudentSerializer
     queryset = models.User.objects.filter(role='Student')
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = [IsStudent]
 
 class ResearcherViewsets(viewsets.ModelViewSet):
     serializer_class = serializers.ResearcherSerializer
     queryset = models.User.objects.filter(role='Researcher')
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = [IsResearcher | IsAdmin]
 
 class UserLoginApiView(ObtainAuthToken):
     renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
 
-
 class Categorie_EquipementApiView(APIView):
     serializer_class = serializers.Categorie_EquipementSerializer
     queryset = models.Categorie_Equipement.objects.all()
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsAdmin()]
+        elif self.request.method == 'POST':
+            return [IsAdmin()]
+        elif self.request.method == 'PUT':
+            return [IsAdmin()]
+        elif self.request.method == 'DELETE':
+            return [IsAdmin()]
+        else:
+            return []
 
     def get(self, request, pk=None):
         if pk:
@@ -160,6 +181,18 @@ class Categorie_EquipementApiView(APIView):
 class LoacationApiView(APIView):
     queryset = models.Location.objects.all()
     serializer_class = serializers.LocationSerializer
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsAdmin()]
+        elif self.request.method == 'POST':
+            return [IsAdmin()]
+        elif self.request.method == 'PUT':
+            return [IsAdmin()]
+        elif self.request.method == 'DELETE':
+            return [IsAdmin()]
+        else:
+            return []
 
     def get(self, request, pk=None):
         if pk:
@@ -279,6 +312,16 @@ class EquipementApiview(APIView):
     queryset = models.Equipement.objects.all()
     serializer_class = serializers.EquipementSerializer
 
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsPrincipalManager()]
+        elif self.request.method == 'PUT':
+            return [IsPrincipalManager()]
+        elif self.request.method == 'DELETE':
+            return [IsPrincipalManager()]
+        else:
+            return []
+
     def get(self, request, pk=None):
         if pk:
             try:
@@ -367,6 +410,16 @@ class StockApiView(APIView):
     queryset = models.Stock.objects.all()
     serializer_class = serializers.StockSerializer
 
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsPrincipalManager()]
+        elif self.request.method == 'POST':
+            return [IsPrincipalManager()]
+        elif self.request.method == 'DELETE':
+            return [IsPrincipalManager()]
+        else:
+            return []
+
     def get(self, request, pk=None):
         if pk:
             try:
@@ -385,33 +438,41 @@ class StockApiView(APIView):
             serializer = serializers.StockSerializer(stock, many=True)
             return Response(serializer.data)
 
-    def post(self, request):
+    def post(self, request, pk=None):
         serializer = serializers.StockSerializer(data=request.data)
-        if models.Location.objects.filter(type='stocks').exists():
-            if serializer.is_valid():
-                serializer.save()
-                return Response(
-                    {
-                    'messge' : 'new equipement created successfuly',
-                    'new equipement' : serializer.data
-                    },
-                    status=status.HTTP_201_CREATED
-                )
+        if pk:
+            return Response(
+                {
+                    'message' : 'you cannot create a new equipement inside an existing equipement'
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        else:
+            if models.Location.objects.filter(type='stocks').exists():
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response(
+                        {
+                        'messge' : 'new equipement created successfuly',
+                        'new equipement' : serializer.data
+                        },
+                        status=status.HTTP_201_CREATED
+                    )
+                else:
+                    return Response(
+                        {
+                        'message' : 'Equipement field created',
+                        'errors' : serializer.errors
+                        },
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
             else:
                 return Response(
                     {
-                    'message' : 'Equipement field created',
-                    'errors' : serializer.errors
+                        'message' : 'there is no stock in locations wait until the admin create it'
                     },
-                    status=status.HTTP_400_BAD_REQUEST
+                    status=status.HTTP_404_NOT_FOUND
                 )
-        else:
-            return Response(
-                {
-                    'message' : 'there is no stock in locations wait until the admin create it'
-                },
-                status=status.HTTP_404_NOT_FOUND
-            )
 
     def delete(self, request, pk=None):
         if pk:
@@ -445,6 +506,16 @@ class StockApiView(APIView):
 class AffectationApiView(APIView):
     queryset = models.Affectation.objects.all()
     serializer_class = serializers.AffectationSerializer
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsPrincipalManager()]
+        elif self.request.method == 'POST':
+            return [IsPrincipalManager()]
+        elif self.request.method == 'DELETE':
+            return [IsPrincipalManager()]
+        else:
+            return []
 
     def get(self, request, pk=None):
         if pk:
@@ -523,6 +594,16 @@ class AffectationApiView(APIView):
 class InventoryApiView(APIView):
     queryset = models.Inventory.objects.all()
     serializer_class = serializers.InventorySerializer
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsAdminOrIsPrincipalManager()]
+        elif self.request.method == 'PUT':
+            return [IsPrincipalManager()]
+        elif self.request.method == 'DELETE':
+            return [IsPrincipalManager()]
+        else:
+            return []
 
     def get(self, request, pk=None):
         if pk:
@@ -622,6 +703,14 @@ class AllocationApiView(APIView):
     queryset = models.Allocation.objects.all()
     serializer_class = serializers.AllocationSerializer
 
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsAllocationManagerOrIsStudentOrIsResearcher()]
+        elif self.request.method == 'DELETE':
+            return [IsAllocationManager()]
+        else:
+            return []
+
     def get(self, request, pk=None):
         if pk:
             try:
@@ -671,6 +760,16 @@ class AllocationApiView(APIView):
 class AllocateApiView(APIView):
     queryset = models.Allocate.objects.all()
     serializer_class = serializers.AllocateSerializer
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsStudentOrResearcher()]
+        elif self.request.method == 'POST':
+            return [IsStudentOrResearcher()]
+        elif self.request.method == 'DELETE':
+            return [IsStudentOrResearcher()]
+        else:
+            return []
 
     def get(self, request, pk=None):
         if pk:
@@ -751,6 +850,14 @@ class NotificationStudentApiView(APIView):
     queryset = models.NotificationStudent.objects.all()
     serializer_class = serializers.NotificaionStudentSerializer
 
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsAllocationManager()]
+        elif self.request.method == 'DELETE':
+            return [IsAllocationManager()]
+        else:
+            return []
+
     def get(self, request, pk=None):
         if pk:
             try:
@@ -800,6 +907,16 @@ class NotificationStudentApiView(APIView):
 class AcceptrequestApiView(APIView):
     queryset = models.Acceptrequest.objects.all()
     serializer_class = serializers.AcceptrequestSerializer
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsAllocationManager()]
+        elif self.request.method == 'POST':
+            return [IsAllocationManager()]
+        elif self.request.method == 'DELETE':
+            return [IsAllocationManager()]
+        else:
+            return []
 
     def get(self, request, pk=None):
         if pk:
@@ -871,6 +988,14 @@ class NotificationManagerApiView(APIView):
     queryset = models.NotificationManager.objects.all()
     serializer_class = serializers.NotificationManagerSerializer
 
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsStudentOrResearcher()]
+        elif self.request.method == 'DELETE':
+            return [IsStudentOrResearcher()]
+        else:
+            return []
+
     def get(self, request, pk=None):
         if pk:
             try:
@@ -920,6 +1045,14 @@ class NotificationManagerApiView(APIView):
 class ReservedEquipApiView(APIView):
     queryset = models.ReservedEquip.objects.all()
     serializer_class = serializers.ReservedEquipSerializer
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsAllocationManagerOrIsStudentOrIsResearcher()]
+        elif self.request.method == 'DELETE':
+            return [IsAllocationManagerOrIsStudentOrIsResearcher()]
+        else:
+            return []
 
     def get(self, request, pk=None):
         if pk:

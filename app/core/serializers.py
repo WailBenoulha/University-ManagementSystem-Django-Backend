@@ -107,7 +107,7 @@ class ResearcherSerializer(serializers.ModelSerializer):
 class Categorie_EquipementSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Categorie_Equipement
-        fields = ('id', 'Id_admin','name', 'discription', 'created_on')
+        fields = ('id', 'name', 'discription', 'created_on')
 
 class LocationSerializer(serializers.ModelSerializer):
     class Meta:
