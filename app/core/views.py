@@ -17,6 +17,11 @@ from rest_framework.permissions import IsAuthenticated
 from core.permissions import IsResearcher, IsAdmin, IsAllocationManager, IsPrincipalManager, IsStudent, IsAdminOrIsStudent, IsAdminOrIsAllocationManager, IsAdminOrIsPrincipalManager, IsAdminOrIsResearcher, IsAllocationManagerOrIsStudentOrIsResearcher, IsStudentOrResearcher
 from rest_framework.decorators import permission_classes
 
+from django.contrib.auth import login
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.sessions.backends.db import SessionStore
+
 class UserViewsets(viewsets.ModelViewSet):
     serializer_class = serializers.UserSerializer
     queryset = models.User.objects.all()
@@ -49,6 +54,53 @@ class ResearcherViewsets(viewsets.ModelViewSet):
 
 class UserLoginApiView(ObtainAuthToken):
     renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
+
+    @method_decorator(csrf_exempt)  # Disable CSRF protection for this view
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        token = response.data['token']
+        user = self.get_user(request, token)
+
+        if user:
+            user.backend = 'django.contrib.auth.backends.ModelBackend'
+            login(request, user)
+            session = self.create_session(request, user)
+            response.set_cookie('sessionid', session.session_key)
+
+            data = {
+                'token': token,
+                'role': user.role,
+                'name': user.name,
+                'email': user.email,
+                'lastname': user.lastname,
+                'phonenumber': user.phonenumber,
+                'national_card_number': user.national_card_number,
+                'address': user.address,
+            }
+            return Response(data, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    def get_user(self, request, token):
+        # Implement your logic to retrieve the user based on the token
+        try:
+            token_obj = Token.objects.get(key=token)
+            user = token_obj.user
+            return user
+        except Token.DoesNotExist:
+            return None
+
+    def create_session(self, request, user):
+        session = SessionStore()
+        session.create()
+        session['user_id'] = user.id
+        session['role'] = user.role
+        session.save()
+        return session
+
 
 class Categorie_EquipementApiView(APIView):
     serializer_class = serializers.Categorie_EquipementSerializer
@@ -761,15 +813,15 @@ class AllocateApiView(APIView):
     queryset = models.Allocate.objects.all()
     serializer_class = serializers.AllocateSerializer
 
-    def get_permissions(self):
-        if self.request.method == 'GET':
-            return [IsStudentOrResearcher()]
-        elif self.request.method == 'POST':
-            return [IsStudentOrResearcher()]
-        elif self.request.method == 'DELETE':
-            return [IsStudentOrResearcher()]
-        else:
-            return []
+    # def get_permissions(self):
+    #     if self.request.method == 'GET':
+    #         return [IsStudentOrResearcher()]
+    #     elif self.request.method == 'POST':
+    #         return [IsStudentOrResearcher()]
+    #     elif self.request.method == 'DELETE':
+    #         return [IsStudentOrResearcher()]
+    #     else:
+    #         return []
 
     def get(self, request, pk=None):
         if pk:
@@ -1156,3 +1208,77 @@ class ReturnEquipementApiview(APIView):
                         },
                         status=status.HTTP_400_BAD_REQUEST
                     )
+
+class AllocationEquipementsApiView(APIView):
+    serializer_class = serializers.InventorySerializer
+
+    def get(self, request, pk=None):
+        if pk:
+            try:
+                typelocation = models.Location.objects.get(type='reservation_room')
+                equip = models.Inventory.objects.get(Location=typelocation, pk=pk)
+            except models.Inventory.DoesNotExist:
+                return Response(
+                    {
+                    'message' : 'the equipement that you tryna access is not exist'
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            serializer = serializers.InventorySerializer(equip)
+            return Response(serializer.data)
+        else:
+            typelocation = models.Location.objects.filter(type='reservation_room')
+            equip = models.Inventory.objects.filter(Location__in=typelocation)
+            serializer = serializers.InventorySerializer(equip, many=True)
+            return Response(serializer.data)
+
+# class AllocateEquipementsApiView(APIView):
+#     queryset = models.AllocateEquipements.objects.all()
+#     serializer_class = serializers.AllocateEquipementsSerializer
+
+#     def get(self, request, pk=None):
+#         if pk:
+#             try:
+#                 allocate = models.AllocateEquipements.objects.get(pk=pk)
+#             except models.Allocate.DoesNotExist:
+#                 return Response(
+#                     {
+#                     'message' : 'the allocation opperation that you tryna access is not exist'
+#                     },
+#                     status=status.HTTP_404_NOT_FOUND
+#                 )
+#             serializer = serializers.AllocateEquipementsSerializer(allocate)
+#             return Response(serializer.data)
+#         else:
+#             allocate = models.AllocateEquipements.objects.all()
+#             serializer = serializers.AllocateEquipementsSerializer(allocate, many=True)
+#             return Response(serializer.data)
+
+#     def post(self, request):
+#         serializer = serializers.AllocateEquipementsSerializer(data=request.data)
+
+#         # if request.data.get('reference') is None:
+#         #     return Response(
+#         #         {
+#         #             'meassage' : 'there is no equipement to allocate'
+#         #         },
+#         #         status=status.HTTP_400_BAD_REQUEST
+#         #     )
+#         # else:
+#         if serializer.is_valid():
+#                 serializer.save()
+#                 return Response(
+#                     {
+#                     'messge' : 'new allocation request created successfuly wait until the admin accept',
+#                     'new_request_allocation' : serializer.data
+#                     },
+#                     status=status.HTTP_201_CREATED
+#                 )
+#         else:
+#                 return Response(
+#                     {
+#                     'message' : 'Allocation request failed',
+#                     'errors' : serializer.errors
+#                     },
+#                     status=status.HTTP_400_BAD_REQUEST
+#                 )

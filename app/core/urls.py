@@ -11,6 +11,7 @@ router.register(r'Allocationmanager', views.AllocationmanagerViewsets, basename=
 router.register(r'Student', views.StudentViewsets, basename='profiles-student')
 router.register(r'Researcher', views.ResearcherViewsets, basename='profiles-researcher')
 
+
 urlpatterns = [
     path('profiles/', include(router.urls)),
     path('login/', views.UserLoginApiView.as_view()),
@@ -39,5 +40,9 @@ urlpatterns = [
     path('reservedequip/', views.ReservedEquipApiView.as_view()),
     path('reservedequip/<int:pk>/', views.ReservedEquipApiView.as_view()),
     path('returnequipement/', views.ReturnEquipementApiview.as_view()),
-    path('returnequipement/<int:pk>/', views.ReturnEquipementApiview.as_view())
+    path('returnequipement/<int:pk>/', views.ReturnEquipementApiview.as_view()),
+    path('aloequip/', views.AllocationEquipementsApiView.as_view()),
+    path('aloequip/<int:pk>/', views.AllocationEquipementsApiView.as_view())
+    # path('allocateequipements/', views.AllocateEquipementsApiView.as_view()),
+    # path('allocateequipements/<int:pk>', views.AllocateEquipementsApiView.as_view())
 ]

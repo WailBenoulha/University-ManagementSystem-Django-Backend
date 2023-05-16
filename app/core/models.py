@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from django.contrib.auth.models import Group
 import random
 from django.db import models
@@ -587,6 +588,40 @@ class ReturnEquipement(models.Model):
         reserved_equipement.save()
         equipement.delete()
 
+# class AllocateEquipements(models.Model):
+#     Reserved_by = models.ForeignKey(
+#         settings.AUTH_USER_MODEL,
+#         editable=False,
+#         on_delete=models.CASCADE
+#     )
+#     equipement = models.ForeignKey(
+#         Inventory,
+#         on_delete=models.CASCADE,
+#         limit_choices_to={'Location__type':'reservation_room'},
+#         to_field='reference'
+#     )
+#     CHOICES = (
+#         (datetime.now(), datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+#         (datetime.now() + timedelta(days=1), (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")),
+#         (datetime.now() + timedelta(days=2), (datetime.now() + timedelta(days=2)).strftime("%Y-%m-%d %H:%M:%S")),
+#         (datetime.now() + timedelta(days=3), (datetime.now() + timedelta(days=3)).strftime("%Y-%m-%d %H:%M:%S")),
+#         (datetime.now() + timedelta(days=4), (datetime.now() + timedelta(days=4)).strftime("%Y-%m-%d %H:%M:%S")),
+#         (datetime.now() + timedelta(days=5), (datetime.now() + timedelta(days=5)).strftime("%Y-%m-%d %H:%M:%S")),
+#         (datetime.now() + timedelta(days=6), (datetime.now() + timedelta(days=6)).strftime("%Y-%m-%d %H:%M:%S")),
+#         (datetime.now() + timedelta(days=7), (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d %H:%M:%S")),
+#     )
+#     start_date = models.DateField(choices=CHOICES, validators=[MinValueValidator(datetime.now())])
+#     finish_date = models.DateField(editable=False, null=True)
+#     purpose = models.CharField(max_length=250, default='')
+#     Message = models.CharField(editable=False, max_length=250)
+
+#     def save(self, *args, **kwargs):
+#         if not self.pk:  # only set finish_date if object is being created for the first time
+#             self.finish_date = self.start_date.date() + timezone.timedelta(days=7)
+#         super(AllocateEquipements, self).save(*args, **kwargs)
+
+
+
 
 
 # HPC
@@ -607,3 +642,4 @@ class ReturnEquipement(models.Model):
 #         on_delete=models.CASCADE
 #     )
 #     purpose = models.CharField(max_length=250, default='')
+

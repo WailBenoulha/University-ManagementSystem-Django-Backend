@@ -169,3 +169,8 @@ class ReturnEquipementSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.ReturnEquipement
         fields =('id', 'Equipement')
+
+# class AllocateEquipementsSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = models.AllocateEquipements
+#         fields = ('id', 'Reserved_by', 'equipement', 'start_date', 'finish_date', 'purpose', 'Message')
