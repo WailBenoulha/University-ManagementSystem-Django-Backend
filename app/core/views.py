@@ -21,6 +21,8 @@ from django.contrib.auth import login
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.sessions.backends.db import SessionStore
+from django.db import transaction
+from django.db import IntegrityError
 
 class UserViewsets(viewsets.ModelViewSet):
     serializer_class = serializers.UserSerializer
@@ -29,8 +31,8 @@ class UserViewsets(viewsets.ModelViewSet):
 class AdminViewsets(viewsets.ModelViewSet):
     serializer_class = serializers.AdminSerializer
     queryset = models.User.objects.filter(role='Admin')
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = (permissions.UpdateOwnProfile,)
+    # authentication_classes = (TokenAuthentication,)
+    # permission_classes = (permissions.UpdateOwnProfile,)
 
 class PrincipalmanagerViewsets(viewsets.ModelViewSet):
     serializer_class = serializers.PrincipalmanagerSerializer
@@ -43,14 +45,14 @@ class AllocationmanagerViewsets(viewsets.ModelViewSet):
 class StudentViewsets(viewsets.ModelViewSet):
     serializer_class = serializers.StudentSerializer
     queryset = models.User.objects.filter(role='Student')
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = [IsStudent]
+    # authentication_classes = (TokenAuthentication,)
+    # permission_classes = [IsStudent]
 
 class ResearcherViewsets(viewsets.ModelViewSet):
     serializer_class = serializers.ResearcherSerializer
     queryset = models.User.objects.filter(role='Researcher')
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = [IsResearcher | IsAdmin]
+    # authentication_classes = (TokenAuthentication,)
+    # permission_classes = [IsResearcher | IsAdmin]
 
 class UserLoginApiView(ObtainAuthToken):
     renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
@@ -106,17 +108,17 @@ class Categorie_EquipementApiView(APIView):
     serializer_class = serializers.Categorie_EquipementSerializer
     queryset = models.Categorie_Equipement.objects.all()
 
-    def get_permissions(self):
-        if self.request.method == 'GET':
-            return [IsAdmin()]
-        elif self.request.method == 'POST':
-            return [IsAdmin()]
-        elif self.request.method == 'PUT':
-            return [IsAdmin()]
-        elif self.request.method == 'DELETE':
-            return [IsAdmin()]
-        else:
-            return []
+    # def get_permissions(self):
+    #     if self.request.method == 'GET':
+    #         return [IsAdmin()]
+    #     elif self.request.method == 'POST':
+    #         return [IsAdmin()]
+    #     elif self.request.method == 'PUT':
+    #         return [IsAdmin()]
+    #     elif self.request.method == 'DELETE':
+    #         return [IsAdmin()]
+    #     else:
+    #         return []
 
     def get(self, request, pk=None):
         if pk:
@@ -234,17 +236,17 @@ class LoacationApiView(APIView):
     queryset = models.Location.objects.all()
     serializer_class = serializers.LocationSerializer
 
-    def get_permissions(self):
-        if self.request.method == 'GET':
-            return [IsAdmin()]
-        elif self.request.method == 'POST':
-            return [IsAdmin()]
-        elif self.request.method == 'PUT':
-            return [IsAdmin()]
-        elif self.request.method == 'DELETE':
-            return [IsAdmin()]
-        else:
-            return []
+    # def get_permissions(self):
+    #     if self.request.method == 'GET':
+    #         return [IsAdmin()]
+    #     elif self.request.method == 'POST':
+    #         return [IsAdmin()]
+    #     elif self.request.method == 'PUT':
+    #         return [IsAdmin()]
+    #     elif self.request.method == 'DELETE':
+    #         return [IsAdmin()]
+    #     else:
+    #         return []
 
     def get(self, request, pk=None):
         if pk:
@@ -364,15 +366,15 @@ class EquipementApiview(APIView):
     queryset = models.Equipement.objects.all()
     serializer_class = serializers.EquipementSerializer
 
-    def get_permissions(self):
-        if self.request.method == 'GET':
-            return [IsPrincipalManager()]
-        elif self.request.method == 'PUT':
-            return [IsPrincipalManager()]
-        elif self.request.method == 'DELETE':
-            return [IsPrincipalManager()]
-        else:
-            return []
+    # def get_permissions(self):
+    #     if self.request.method == 'GET':
+    #         return [IsPrincipalManager()]
+    #     elif self.request.method == 'PUT':
+    #         return [IsPrincipalManager()]
+    #     elif self.request.method == 'DELETE':
+    #         return [IsPrincipalManager()]
+    #     else:
+    #         return []
 
     def get(self, request, pk=None):
         if pk:
@@ -462,15 +464,15 @@ class StockApiView(APIView):
     queryset = models.Stock.objects.all()
     serializer_class = serializers.StockSerializer
 
-    def get_permissions(self):
-        if self.request.method == 'GET':
-            return [IsPrincipalManager()]
-        elif self.request.method == 'POST':
-            return [IsPrincipalManager()]
-        elif self.request.method == 'DELETE':
-            return [IsPrincipalManager()]
-        else:
-            return []
+    # def get_permissions(self):
+    #     if self.request.method == 'GET':
+    #         return [IsPrincipalManager()]
+    #     elif self.request.method == 'POST':
+    #         return [IsPrincipalManager()]
+    #     elif self.request.method == 'DELETE':
+    #         return [IsPrincipalManager()]
+    #     else:
+    #         return []
 
     def get(self, request, pk=None):
         if pk:
@@ -559,15 +561,15 @@ class AffectationApiView(APIView):
     queryset = models.Affectation.objects.all()
     serializer_class = serializers.AffectationSerializer
 
-    def get_permissions(self):
-        if self.request.method == 'GET':
-            return [IsPrincipalManager()]
-        elif self.request.method == 'POST':
-            return [IsPrincipalManager()]
-        elif self.request.method == 'DELETE':
-            return [IsPrincipalManager()]
-        else:
-            return []
+    # def get_permissions(self):
+    #     if self.request.method == 'GET':
+    #         return [IsPrincipalManager()]
+    #     elif self.request.method == 'POST':
+    #         return [IsPrincipalManager()]
+    #     elif self.request.method == 'DELETE':
+    #         return [IsPrincipalManager()]
+    #     else:
+    #         return []
 
     def get(self, request, pk=None):
         if pk:
@@ -647,15 +649,15 @@ class InventoryApiView(APIView):
     queryset = models.Inventory.objects.all()
     serializer_class = serializers.InventorySerializer
 
-    def get_permissions(self):
-        if self.request.method == 'GET':
-            return [IsAdminOrIsPrincipalManager()]
-        elif self.request.method == 'PUT':
-            return [IsPrincipalManager()]
-        elif self.request.method == 'DELETE':
-            return [IsPrincipalManager()]
-        else:
-            return []
+    # def get_permissions(self):
+    #     if self.request.method == 'GET':
+    #         return [IsAdminOrIsPrincipalManager()]
+    #     elif self.request.method == 'PUT':
+    #         return [IsPrincipalManager()]
+    #     elif self.request.method == 'DELETE':
+    #         return [IsPrincipalManager()]
+    #     else:
+    #         return []
 
     def get(self, request, pk=None):
         if pk:
@@ -751,164 +753,18 @@ class InventoryApiView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-class AllocationApiView(APIView):
-    queryset = models.Allocation.objects.all()
-    serializer_class = serializers.AllocationSerializer
-
-    def get_permissions(self):
-        if self.request.method == 'GET':
-            return [IsAllocationManagerOrIsStudentOrIsResearcher()]
-        elif self.request.method == 'DELETE':
-            return [IsAllocationManager()]
-        else:
-            return []
-
-    def get(self, request, pk=None):
-        if pk:
-            try:
-                allocation = models.Allocation.objects.get(pk=pk)
-            except models.Allocation.DoesNotExist:
-                return Response(
-                    {
-                    'message' : 'the equipement that you tryna access is not exist'
-                    },
-                    status=status.HTTP_404_NOT_FOUND
-                )
-            serializer = serializers.AllocationSerializer(allocation)
-            return Response(serializer.data)
-        else:
-            allocation = models.Allocation.objects.all()
-            serializer = serializers.AllocationSerializer(allocation, many=True)
-            return Response(serializer.data)
-
-    def delete(self, request, pk=None):
-        if pk:
-            try:
-                allocation = models.Allocation.objects.get(pk=pk)
-            except models.Allocation.DoesNotExist:
-                return Response(
-                    {
-                    'message' : 'the equipement that you tryna access is not exist'
-                    },
-                    status=status.HTTP_404_NOT_FOUND
-                )
-            allocation.delete()
-            return Response(
-                {
-                'message' : 'the equipement deleted successfuly in the ITroom'
-                },
-                status=status.HTTP_204_NO_CONTENT
-            )
-        else:
-            allocation = models.Allocation.objects.all()
-            allocation.delete()
-            return Response(
-                {
-                'message' : 'all the equipements deleted successfully in the ITroom'
-                },
-                status=status.HTTP_204_NO_CONTENT
-            )
-
-class AllocateApiView(APIView):
-    queryset = models.Allocate.objects.all()
-    serializer_class = serializers.AllocateSerializer
-
-    # def get_permissions(self):
-    #     if self.request.method == 'GET':
-    #         return [IsStudentOrResearcher()]
-    #     elif self.request.method == 'POST':
-    #         return [IsStudentOrResearcher()]
-    #     elif self.request.method == 'DELETE':
-    #         return [IsStudentOrResearcher()]
-    #     else:
-    #         return []
-
-    def get(self, request, pk=None):
-        if pk:
-            try:
-                allocate = models.Allocate.objects.get(pk=pk)
-            except models.Allocate.DoesNotExist:
-                return Response(
-                    {
-                    'message' : 'the allocation opperation that you tryna access is not exist'
-                    },
-                    status=status.HTTP_404_NOT_FOUND
-                )
-            serializer = serializers.AllocateSerializer(allocate)
-            return Response(serializer.data)
-        else:
-            allocate = models.Allocate.objects.all()
-            serializer = serializers.AllocateSerializer(allocate, many=True)
-            return Response(serializer.data)
-
-    def post(self, request):
-        serializer = serializers.AllocateSerializer(data=request.data)
-
-        if request.data.get('reference') is None:
-            return Response(
-                {
-                    'meassage' : 'there is no equipement to allocate'
-                },
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        else:
-            if serializer.is_valid():
-                serializer.save()
-                return Response(
-                    {
-                    'messge' : 'new allocation request created successfuly wait until the admin accept',
-                    'new_request_allocation' : serializer.data
-                    },
-                    status=status.HTTP_201_CREATED
-                )
-            else:
-                return Response(
-                    {
-                    'message' : 'Allocation request failed',
-                    'errors' : serializer.errors
-                    },
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-    def delete(self, request, pk=None):
-        if pk:
-            try:
-                allocation = models.Allocate.objects.get(pk=pk)
-            except models.Allocate.DoesNotExist:
-                return Response(
-                    {
-                    'message' : 'the allocation request that you tryna access is not exist'
-                    },
-                    status=status.HTTP_404_NOT_FOUND
-                )
-            allocation.delete()
-            return Response(
-                {
-                'message' : 'the allocation request deleted successfuly'
-                },
-                status=status.HTTP_204_NO_CONTENT
-            )
-        else:
-            allocation = models.Allocate.objects.all()
-            allocation.delete()
-            return Response(
-                {
-                'message' : 'all the allocations requestes deleted successfully'
-                },
-                status=status.HTTP_204_NO_CONTENT
-            )
 
 class NotificationStudentApiView(APIView):
     queryset = models.NotificationStudent.objects.all()
     serializer_class = serializers.NotificaionStudentSerializer
 
-    def get_permissions(self):
-        if self.request.method == 'GET':
-            return [IsAllocationManager()]
-        elif self.request.method == 'DELETE':
-            return [IsAllocationManager()]
-        else:
-            return []
+    # def get_permissions(self):
+    #     if self.request.method == 'GET':
+    #         return [IsAllocationManager()]
+    #     elif self.request.method == 'DELETE':
+    #         return [IsAllocationManager()]
+    #     else:
+    #         return []
 
     def get(self, request, pk=None):
         if pk:
@@ -957,39 +813,39 @@ class NotificationStudentApiView(APIView):
             )
 
 class AcceptrequestApiView(APIView):
-    queryset = models.Acceptrequest.objects.all()
-    serializer_class = serializers.AcceptrequestSerializer
+    queryset = models.AcceptAllocationRequest.objects.all()
+    serializer_class = serializers.AcceptAllocationRequestSerializer
 
-    def get_permissions(self):
-        if self.request.method == 'GET':
-            return [IsAllocationManager()]
-        elif self.request.method == 'POST':
-            return [IsAllocationManager()]
-        elif self.request.method == 'DELETE':
-            return [IsAllocationManager()]
-        else:
-            return []
+    # def get_permissions(self):
+    #     if self.request.method == 'GET':
+    #         return [IsAllocationManager()]
+    #     elif self.request.method == 'POST':
+    #         return [IsAllocationManager()]
+    #     elif self.request.method == 'DELETE':
+    #         return [IsAllocationManager()]
+    #     else:
+    #         return []
 
     def get(self, request, pk=None):
         if pk:
             try:
-                notif = models.Acceptrequest.objects.get(pk=pk)
-            except models.Acceptrequest.DoesNotExist:
+                notif = models.AcceptAllocationRequest.objects.get(pk=pk)
+            except models.AcceptAllocationRequest.DoesNotExist:
                 return Response(
                     {
                     'message' : 'the request that you tryna access does not exist'
                     },
                     status=status.HTTP_404_NOT_FOUND
                 )
-            serializer = serializers.AcceptrequestSerializer(notif)
+            serializer = serializers.AcceptAllocationRequestSerializer(notif)
             return Response(serializer.data)
         else:
-            notif = models.Acceptrequest.objects.all()
-            serializer = serializers.AcceptrequestSerializer(notif, many=True)
+            notif = models.AcceptAllocationRequest.objects.all()
+            serializer = serializers.AcceptAllocationRequestSerializer(notif, many=True)
             return Response(serializer.data)
 
     def post(self, request):
-        serializer = serializers.AcceptrequestSerializer(data=request.data)
+        serializer = serializers.AcceptAllocationRequestSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(
@@ -1011,8 +867,8 @@ class AcceptrequestApiView(APIView):
     def delete(self, request, pk=None):
         if pk:
             try:
-                notif = models.Acceptrequest.objects.get(pk=pk)
-            except models.Acceptrequest.DoesNotExist:
+                notif = models.AcceptAllocationRequest.objects.get(pk=pk)
+            except models.AcceptAllocationRequest.DoesNotExist:
                 return Response(
                     {
                     'message' : 'the opperation that you tryna access is not exist'
@@ -1027,7 +883,7 @@ class AcceptrequestApiView(APIView):
                 status=status.HTTP_204_NO_CONTENT
             )
         else:
-            notif = models.Acceptrequest.objects.all()
+            notif = models.AcceptAllocationRequest.objects.all()
             notif.delete()
             return Response(
                 {
@@ -1094,129 +950,24 @@ class NotificationManagerApiView(APIView):
                 status=status.HTTP_204_NO_CONTENT
             )
 
-class ReservedEquipApiView(APIView):
-    queryset = models.ReservedEquip.objects.all()
-    serializer_class = serializers.ReservedEquipSerializer
 
-    def get_permissions(self):
-        if self.request.method == 'GET':
-            return [IsAllocationManagerOrIsStudentOrIsResearcher()]
-        elif self.request.method == 'DELETE':
-            return [IsAllocationManagerOrIsStudentOrIsResearcher()]
-        else:
-            return []
-
-    def get(self, request, pk=None):
-        if pk:
-            try:
-                allocation = models.ReservedEquip.objects.get(pk=pk)
-            except models.ReservedEquip.DoesNotExist:
-                return Response(
-                    {
-                    'message' : 'the equipement that you tryna access is not exist'
-                    },
-                    status=status.HTTP_404_NOT_FOUND
-                )
-            serializer = serializers.ReservedEquipSerializer(allocation)
-            return Response(serializer.data)
-        else:
-            allocation = models.ReservedEquip.objects.all()
-            serializer = serializers.ReservedEquipSerializer(allocation, many=True)
-            return Response(serializer.data)
-
-    def delete(self, request, pk=None):
-        if pk:
-            try:
-                allocation = models.ReservedEquip.objects.get(pk=pk)
-            except models.ReservedEquip.DoesNotExist:
-                return Response(
-                    {
-                    'message' : 'the equipement that you tryna access is not exist'
-                    },
-                    status=status.HTTP_404_NOT_FOUND
-                )
-            allocation.delete()
-            return Response(
-                {
-                'message' : 'the equipement deleted successfuly in the ITroom'
-                },
-                status=status.HTTP_204_NO_CONTENT
-            )
-        else:
-            allocation = models.ReservedEquip.objects.all()
-            allocation.delete()
-            return Response(
-                {
-                'message' : 'all the equipements deleted successfully in the ITroom'
-                },
-                status=status.HTTP_204_NO_CONTENT
-            )
-
-class ReturnEquipementApiview(APIView):
-    queryset = models.ReturnEquipement.objects.all()
-    serializer_class = serializers.ReturnEquipementSerializer
-
-    def get(self, request, pk=None):
-        if pk:
-            try:
-                equip = models.ReturnEquipement.objects.get(pk=pk)
-            except models.ReturnEquipement.DoesNotExist:
-                return Response(
-                    {
-                    'message' : 'the opperation that you tryna access is not exist'
-                    },
-                    status=status.HTTP_404_NOT_FOUND
-                )
-            serializer = serializers.ReturnEquipementSerializer(equip)
-            return Response(serializer.data)
-        else:
-            equip = models.ReturnEquipement.objects.all()
-            serializer = serializers.ReturnEquipementSerializer(equip, many=True)
-            return Response(serializer.data)
-
-    def post(self, request, pk=None):
-        serializer = self.serializer_class(data=request.data)
-        if pk: return Response(
-                {
-                    'message' : 'opperation invalid'
-                },
-                status=status.HTTP_400_BAD_REQUEST
-        )
-        else:
-            if request.data.get('Equipement') is None:
-                return Response(
-                {
-                    'meassage' : 'there is no reserved equipement to return'
-                },
-                status=status.HTTP_400_BAD_REQUEST
-                )
-            else:
-                if serializer.is_valid():
-                    serializer.save()
-                    return Response(
-                        {
-                        'message' : 'Reserved Equipement returned successfully to ITroom',
-                        'opperation' : serializer.data
-                        },
-                        status= status.HTTP_201_CREATED
-                    )
-                else:
-                    return Response(
-                        {
-                        'message' : 'opperation invalid',
-                        'errors' : serializer.errors
-                        },
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
 
 class AllocationEquipementsApiView(APIView):
     serializer_class = serializers.InventorySerializer
+
+    # def get_permissions(self):
+    #     if self.request.method == 'GET':
+    #         return [IsAllocationManagerOrIsStudentOrIsResearcher()]
+    #     elif self.request.method == 'DELETE':
+    #         return [IsAllocationManager()]
+    #     else:
+    #         return []
 
     def get(self, request, pk=None):
         if pk:
             try:
                 typelocation = models.Location.objects.get(type='reservation_room')
-                equip = models.Inventory.objects.get(Location=typelocation, pk=pk)
+                equip = models.Inventory.objects.get(Location=typelocation, pk=pk, is_reserved=False)
             except models.Inventory.DoesNotExist:
                 return Response(
                     {
@@ -1228,57 +979,107 @@ class AllocationEquipementsApiView(APIView):
             return Response(serializer.data)
         else:
             typelocation = models.Location.objects.filter(type='reservation_room')
-            equip = models.Inventory.objects.filter(Location__in=typelocation)
+            equip = models.Inventory.objects.filter(Location__in=typelocation,  is_reserved=False)
             serializer = serializers.InventorySerializer(equip, many=True)
             return Response(serializer.data)
 
-# class AllocateEquipementsApiView(APIView):
-#     queryset = models.AllocateEquipements.objects.all()
-#     serializer_class = serializers.AllocateEquipementsSerializer
+class ReservedEquipementsApiView(APIView):
+    serializer_class = serializers.InventorySerializer
 
-#     def get(self, request, pk=None):
-#         if pk:
-#             try:
-#                 allocate = models.AllocateEquipements.objects.get(pk=pk)
-#             except models.Allocate.DoesNotExist:
-#                 return Response(
-#                     {
-#                     'message' : 'the allocation opperation that you tryna access is not exist'
-#                     },
-#                     status=status.HTTP_404_NOT_FOUND
-#                 )
-#             serializer = serializers.AllocateEquipementsSerializer(allocate)
-#             return Response(serializer.data)
-#         else:
-#             allocate = models.AllocateEquipements.objects.all()
-#             serializer = serializers.AllocateEquipementsSerializer(allocate, many=True)
-#             return Response(serializer.data)
+    # def get_permissions(self):
+    #     if self.request.method == 'GET':
+    #         return [IsAllocationManagerOrIsStudentOrIsResearcher()]
+    #     elif self.request.method == 'DELETE':
+    #         return [IsAllocationManagerOrIsStudentOrIsResearcher()]
+    #     else:
+    #         return []
 
-#     def post(self, request):
-#         serializer = serializers.AllocateEquipementsSerializer(data=request.data)
+    def get(self, request, pk=None):
+        if pk:
+            try:
+                typelocation = models.Location.objects.get(type='reservation_room')
+                equip = models.Inventory.objects.get(Location=typelocation, pk=pk, is_reserved=True)
+            except models.Inventory.DoesNotExist:
+                return Response(
+                    {
+                    'message' : 'the equipement that you tryna access is not exist'
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            serializer = serializers.InventorySerializer(equip)
+            return Response(serializer.data)
+        else:
+            typelocation = models.Location.objects.filter(type='reservation_room')
+            equip = models.Inventory.objects.filter(Location__in=typelocation,  is_reserved=True)
+            serializer = serializers.InventorySerializer(equip, many=True)
+            return Response(serializer.data)
 
-#         # if request.data.get('reference') is None:
-#         #     return Response(
-#         #         {
-#         #             'meassage' : 'there is no equipement to allocate'
-#         #         },
-#         #         status=status.HTTP_400_BAD_REQUEST
-#         #     )
-#         # else:
-#         if serializer.is_valid():
-#                 serializer.save()
-#                 return Response(
-#                     {
-#                     'messge' : 'new allocation request created successfuly wait until the admin accept',
-#                     'new_request_allocation' : serializer.data
-#                     },
-#                     status=status.HTTP_201_CREATED
-#                 )
-#         else:
-#                 return Response(
-#                     {
-#                     'message' : 'Allocation request failed',
-#                     'errors' : serializer.errors
-#                     },
-#                     status=status.HTTP_400_BAD_REQUEST
-#                 )
+class AllocateEquipementsApiView(APIView):
+    queryset = models.AllocateEquipements.objects.all()
+    serializer_class = serializers.AllocateEquipementsSerializer
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsStudentOrResearcher()]
+        elif self.request.method == 'POST':
+            return [IsStudentOrResearcher()]
+        elif self.request.method == 'DELETE':
+            return [IsStudentOrResearcher()]
+        else:
+            return []
+
+
+
+    def get(self, request, pk=None):
+        if pk:
+            try:
+                allocate = models.AllocateEquipements.objects.get(pk=pk)
+            except models.Allocate.DoesNotExist:
+                return Response(
+                    {
+                    'message' : 'the allocation opperation that you tryna access is not exist'
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            serializer = serializers.AllocateEquipementsSerializer(allocate)
+            return Response(serializer.data)
+        else:
+            allocate = models.AllocateEquipements.objects.all()
+            serializer = serializers.AllocateEquipementsSerializer(allocate, many=True)
+            return Response(serializer.data)
+
+    def post(self, request):
+        serializer = serializers.AllocateEquipementsSerializer(data=request.data)
+
+        if request.data.get('reference') is None:
+            return Response(
+                {
+                    'meassage' : 'there is no equipement to allocate'
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        else:
+            data = request.data.copy()
+            data['Reserved_by'] = request.user.id
+            serializer = self.serializer_class(data=data)
+            if serializer.is_valid():
+                    self.perform_create(serializer)
+                    serializer.save()
+                    return Response(
+                        {
+                        'messge' : 'new allocation request created successfuly wait until the admin accept',
+                        'new_request_allocation' : serializer.data
+                        },
+                        status=status.HTTP_201_CREATED
+                    )
+            else:
+                    return Response(
+                        {
+                        'message' : 'Allocation request failed',
+                        'errors' : serializer.errors
+                        },
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+    def perform_create(self, serializer):
+        serializer.save(Reserved_by=self.request.user)

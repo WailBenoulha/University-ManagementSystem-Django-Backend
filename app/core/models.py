@@ -11,6 +11,7 @@ from django.dispatch import receiver
 from django.utils import timezone
 from django.conf import settings
 from django.db.models.signals import post_save
+from django.contrib.auth import get_user_model
 
 from django.conf import settings
 
@@ -293,24 +294,6 @@ class Affectation(models.Model):
                 image=equipement.image,
                 is_reserved=equipement.is_reserved
             )
-            allocation_equipement = Allocation(
-                created_by = equipement.created_by,
-                name=equipement.name,
-                brand=equipement.brand,
-                model=equipement.model,
-                categorie=equipement.categorie,
-                reference=equipement.reference,
-                num_serie=equipement.num_serie,
-                condition='good',
-                facture_number=equipement.facture_number,
-                date_purchase=equipement.date_purchase,
-                Location=self.Location,
-                date_assignment=self.date_assignment,
-                discription=equipement.discription,
-                image=equipement.image,
-                is_reserved=equipement.is_reserved
-            )
-            allocation_equipement.save()
             inventory_equipement.save()
             equipement.delete()
         else:
@@ -378,83 +361,60 @@ class Inventory(models.Model):
     image = models.ImageField(upload_to='images/', default='')
     is_reserved = models.BooleanField(default=False, editable=False)
 
-    def __srt__(self):
+    def __str__(self):
         return self.reference
 
-class Allocation(models.Model):
-    created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        editable=False,
-        on_delete=models.CASCADE
-    )
-    name = models.CharField(max_length=250, editable=False)
-    brand = models.CharField(max_length=250, editable=False)
-    model = models.CharField(max_length=250, editable=False)
-    categorie = models.ForeignKey(
-        Categorie_Equipement,
-        to_field='name',
-        editable=False,
-        on_delete=models.CASCADE
-    )
-    reference = models.CharField(max_length=10, unique=True, editable=False)
-    num_serie = models.CharField(max_length=6, unique=True, editable=False)
-    CONDITION_CHOICES =(
-        ('new','New'),
-        ('good','Good'),
-        ('meduim','Meduim'),
-        ('poor','Poor'),
-        ('in_repair','In_repair'),
-        ('stolen','Stolen'),
-        ('reserve','Reserve'),
-    )
-    condition = models.CharField(choices=CONDITION_CHOICES, max_length=250)
-    facture_number = models.IntegerField(editable=False)
-    date_purchase = models.DateField(default=None, editable=False)
-    Location = models.ForeignKey(
-        Location,
-        to_field='name',
-        editable=False,
-        on_delete=models.CASCADE
-    )
-    date_assignment = models.DateField(null=True, editable=False, blank=True)
-    discription = models.CharField(default='', max_length=250)
-    image = models.ImageField(upload_to='images/', default='')
-    is_reserved = models.BooleanField(default=False, editable=False)
-
-    def __srt__(self):
-        return self.reference
-
-class Allocate(models.Model):
-    reference = models.ForeignKey(
-        Allocation,
-        to_field='reference',
-        on_delete=models.CASCADE
-    )
-    start_date = models.DateTimeField()
-    finish_date = models.DateTimeField()
-    purpose = models.CharField(max_length=250, default='')
-    Message = models.CharField(editable=False, max_length=250)
-
-    def save(self, *args, **kwargs):
-        self.Message = f"the student asked to allocate the equipement {self.reference.name} {self.reference.brand} {self.reference.model} {self.reference.reference} at the startdate {self.start_date} and the finishdate {self.finish_date}"
-        super().save(*args, **kwargs)
-
-        ref = self.reference
-        equipement = Allocation.objects.get(id=ref.id)
-        notification_to_manager = NotificationStudent(
-            message = self.Message,
-            reference = equipement.reference
-        )
-        notification_to_manager.save()
 
 class NotificationStudent(models.Model):
-    message = models.CharField(editable=False, unique=True, max_length=250)
+    message = models.CharField(editable=False, max_length=250)
     reference = models.CharField(max_length=10, editable=False)
+    send_by = models.CharField(editable=False, max_length=250, default='')
 
     def __str__(self):
         return self.message
 
-class Acceptrequest(models.Model):
+
+class NotificationManager(models.Model):
+    message = models.CharField(editable=False, max_length=250)
+
+
+class AllocateEquipements(models.Model):
+    Reserved_by = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        editable=False
+    )
+    reference = models.ForeignKey(
+        Inventory,
+        on_delete=models.CASCADE,
+        limit_choices_to={'Location__type':'reservation_room', 'is_reserved': False},
+        to_field='reference'
+    )
+    start_date = models.DateField()
+    finish_date = models.DateField()
+    purpose = models.CharField(max_length=250, default='')
+    Message = models.CharField(editable=False, max_length=250)
+
+    def save(self, *args, **kwargs):
+        if self.Reserved_by is None:
+            # Assign the authenticated user if not already set
+            self.Reserved_by = self.request.user
+        ref = self.Reserved_by
+        user = User.objects.get(id=ref.id)
+        self.Message = f"{user.name} {user.lastname} asked to allocate the equipement {self.reference.name} {self.reference.brand} {self.reference.model} {self.reference.reference} at the startdate {self.start_date} and the finishdate {self.finish_date}"
+        super().save(*args, **kwargs)
+
+        ref = self.reference
+        equipement = Inventory.objects.get(id=ref.id)
+        notification_to_manager = NotificationStudent(
+            message = self.Message,
+            reference = equipement.reference,
+            send_by = self.Reserved_by
+        )
+        notification_to_manager.save()
+
+
+class AcceptAllocationRequest(models.Model):
     Allocation_request = models.ForeignKey(
         NotificationStudent,
         on_delete=models.CASCADE
@@ -472,31 +432,16 @@ class Acceptrequest(models.Model):
             try:
                 notificationtd = self.Allocation_request
                 allocation_ref = notificationtd.reference
-                equipement = Allocation.objects.get(reference=allocation_ref)
-                reserved_equipement = ReservedEquip(
-                    created_by = equipement.created_by,
-                    name = equipement.name,
-                    brand = equipement.brand,
-                    model = equipement.model,
-                    categorie = equipement.categorie,
-                    reference = equipement.reference,
-                    num_serie = equipement.num_serie,
-                    condition = equipement.condition,
-                    facture_number = equipement.facture_number,
-                    date_purchase = equipement.date_purchase,
-                    Location = equipement.Location,
-                    date_assignment =equipement.date_assignment,
-                    discription = equipement.discription,
-                    image = equipement.image,
-                    is_reserved=equipement.is_reserved
-                )
+                equipement = Inventory.objects.get(reference=allocation_ref)
+
+                equipement.is_reserved = True
+                equipement.save()
+
                 notification = NotificationManager(
                     message = self.message1
                 )
                 notification.save()
-                reserved_equipement.save()
-                equipement.delete()
-                notificationtd.delete()
+                # notificationtd.delete()
             except NotificationStudent.DoesNotExist:
                 pass
         else:
@@ -509,119 +454,6 @@ class Acceptrequest(models.Model):
                 notificationstd.delete()
             except NotificationStudent.DoesNotExist:
                 pass
-
-
-class NotificationManager(models.Model):
-    message = models.CharField(editable=False, max_length=250)
-
-class ReservedEquip(models.Model):
-    created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        editable=False,
-        on_delete=models.CASCADE
-    )
-    name = models.CharField(max_length=250, editable=False)
-    brand = models.CharField(max_length=250, editable=False)
-    model = models.CharField(max_length=250, editable=False)
-    categorie = models.ForeignKey(
-        Categorie_Equipement,
-        to_field='name',
-        editable=False,
-        on_delete=models.CASCADE
-    )
-    reference = models.CharField(max_length=10, unique=True, editable=False)
-    num_serie = models.CharField(max_length=6, unique=True, editable=False)
-    CONDITION_CHOICES =(
-        ('new','New'),
-        ('good','Good'),
-        ('meduim','Meduim'),
-        ('poor','Poor'),
-        ('in_repair','In_repair'),
-        ('stolen','Stolen'),
-        ('reserve','Reserve'),
-    )
-    condition = models.CharField(choices=CONDITION_CHOICES, max_length=250)
-    facture_number = models.IntegerField(editable=False)
-    date_purchase = models.DateField(default=None, editable=False)
-    Location = models.ForeignKey(
-        Location,
-        to_field='name',
-        editable=False,
-        on_delete=models.CASCADE
-    )
-    date_assignment = models.DateField(null=True, editable=False, blank=True)
-    discription = models.CharField(default='', max_length=250)
-    image = models.ImageField(upload_to='images/', default='')
-    is_reserved = models.BooleanField(default=True, editable=False)
-
-    def __srt__(self):
-        return self.reference
-
-class ReturnEquipement(models.Model):
-    Equipement = models.OneToOneField(
-        ReservedEquip,
-        to_field='reference',
-        on_delete=models.CASCADE,
-        verbose_name="Equipment"
-    )
-
-    def save(self, *args, **kwargs):
-        ref = self.Equipement
-        equipement = ReservedEquip.objects.get(reference=ref)
-        reserved_equipement = Allocation(
-            created_by = equipement.created_by,
-            name = equipement.name,
-            brand = equipement.brand,
-            model = equipement.model,
-            categorie = equipement.categorie,
-            reference = equipement.reference,
-            num_serie = equipement.num_serie,
-            condition = equipement.condition,
-            facture_number = equipement.facture_number,
-            date_purchase = equipement.date_purchase,
-            Location = equipement.Location,
-            date_assignment =equipement.date_assignment,
-            discription = equipement.discription,
-            image = equipement.image,
-            is_reserved=equipement.is_reserved
-        )
-        reserved_equipement.save()
-        equipement.delete()
-
-# class AllocateEquipements(models.Model):
-#     Reserved_by = models.ForeignKey(
-#         settings.AUTH_USER_MODEL,
-#         editable=False,
-#         on_delete=models.CASCADE
-#     )
-#     equipement = models.ForeignKey(
-#         Inventory,
-#         on_delete=models.CASCADE,
-#         limit_choices_to={'Location__type':'reservation_room'},
-#         to_field='reference'
-#     )
-#     CHOICES = (
-#         (datetime.now(), datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
-#         (datetime.now() + timedelta(days=1), (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")),
-#         (datetime.now() + timedelta(days=2), (datetime.now() + timedelta(days=2)).strftime("%Y-%m-%d %H:%M:%S")),
-#         (datetime.now() + timedelta(days=3), (datetime.now() + timedelta(days=3)).strftime("%Y-%m-%d %H:%M:%S")),
-#         (datetime.now() + timedelta(days=4), (datetime.now() + timedelta(days=4)).strftime("%Y-%m-%d %H:%M:%S")),
-#         (datetime.now() + timedelta(days=5), (datetime.now() + timedelta(days=5)).strftime("%Y-%m-%d %H:%M:%S")),
-#         (datetime.now() + timedelta(days=6), (datetime.now() + timedelta(days=6)).strftime("%Y-%m-%d %H:%M:%S")),
-#         (datetime.now() + timedelta(days=7), (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d %H:%M:%S")),
-#     )
-#     start_date = models.DateField(choices=CHOICES, validators=[MinValueValidator(datetime.now())])
-#     finish_date = models.DateField(editable=False, null=True)
-#     purpose = models.CharField(max_length=250, default='')
-#     Message = models.CharField(editable=False, max_length=250)
-
-#     def save(self, *args, **kwargs):
-#         if not self.pk:  # only set finish_date if object is being created for the first time
-#             self.finish_date = self.start_date.date() + timezone.timedelta(days=7)
-#         super(AllocateEquipements, self).save(*args, **kwargs)
-
-
-
 
 
 # HPC

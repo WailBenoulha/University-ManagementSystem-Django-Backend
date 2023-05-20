@@ -135,42 +135,25 @@ class InventorySerializer(serializers.ModelSerializer):
         model = models.Inventory
         fields = ('id', 'created_by', 'name', 'brand', 'model', 'categorie', 'reference', 'num_serie', 'condition', 'facture_number', 'date_purchase', 'Location', 'date_assignment','discription', 'image', 'is_reserved')
 
-class AllocationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Allocation
-        fields = ('id', 'created_by', 'name', 'brand', 'model', 'categorie', 'reference', 'num_serie', 'condition', 'facture_number', 'date_purchase', 'Location', 'date_assignment','discription', 'image', 'is_reserved')
-
-class AllocateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Allocate
-        fields = ('id', 'reference', 'start_date', 'finish_date', 'purpose')
 
 class NotificaionStudentSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.NotificationStudent
-        fields = ('id', 'message', 'reference')
+        fields = ('id', 'message', 'reference', 'send_by')
 
-class AcceptrequestSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Acceptrequest
-        fields = ('id', 'Allocation_request', 'accept')
 
 class NotificationManagerSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.NotificationManager
         fields =('id', 'message')
 
-class ReservedEquipSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Allocation
-        fields = ('id', 'created_by', 'name', 'brand', 'model', 'categorie', 'reference', 'num_serie', 'condition', 'facture_number', 'date_purchase', 'Location', 'date_assignment','discription', 'image', 'is_reserved')
 
-class ReturnEquipementSerializer(serializers.ModelSerializer):
+class AllocateEquipementsSerializer(serializers.ModelSerializer):
     class Meta:
-        model = models.ReturnEquipement
-        fields =('id', 'Equipement')
+        model = models.AllocateEquipements
+        fields = ('id', 'Reserved_by', 'reference', 'start_date', 'finish_date', 'purpose', 'Message')
 
-# class AllocateEquipementsSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = models.AllocateEquipements
-#         fields = ('id', 'Reserved_by', 'equipement', 'start_date', 'finish_date', 'purpose', 'Message')
+class AcceptAllocationRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.AcceptAllocationRequest
+        fields = ('id', 'Allocation_request', 'accept')
