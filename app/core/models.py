@@ -114,19 +114,21 @@ class Location(models.Model):
 class Equipement(models.Model):
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
+        editable=False,
         on_delete=models.CASCADE
     )
-    name = models.CharField(max_length=250)
-    brand = models.CharField(max_length=250)
-    model = models.CharField(max_length=250)
+    name = models.CharField(max_length=250, editable=False)
+    brand = models.CharField(max_length=250, editable=False)
+    model = models.CharField(max_length=250, editable=False)
     categorie = models.ForeignKey(
         Categorie_Equipement,
         to_field='name',
+        editable=False,
         default='',
         on_delete=models.CASCADE
     )
     reference = models.CharField(max_length=10, unique=True, editable=False)
-    num_serie = models.CharField(max_length=6, unique=True, editable=False)
+    num_serie = models.CharField(max_length=6, unique=True)
     CONDITION_CHOICES =(
         ('new','New'),
         ('good','Good'),
@@ -136,11 +138,12 @@ class Equipement(models.Model):
         ('stolen','Stolen'),
         ('reserve','Reserve'),
     )
-    condition = models.CharField(choices=CONDITION_CHOICES, max_length=250, default='new')
-    facture_number = models.IntegerField()
-    date_purchase = models.DateField(default=None)
+    condition = models.CharField(choices=CONDITION_CHOICES, max_length=250, default='new', editable=False)
+    facture_number = models.IntegerField(editable=False)
+    date_purchase = models.DateField(default=None, editable=False)
     Location = models.ForeignKey(
         Location,
+        editable=False,
         to_field='name',
         on_delete=models.CASCADE
     )
@@ -163,12 +166,12 @@ class Equipement(models.Model):
             self.reference = ref
 
         # Generate a unique num_serie
-        while True:
-            num_serie = str(random.randint(100000, 999999))
-            if not Equipement.objects.filter(num_serie=num_serie).exists():
-                break
+        # while True:
+        #     num_serie = str(random.randint(100000, 999999))
+        #     if not Equipement.objects.filter(num_serie=num_serie).exists():
+        #         break
 
-        self.num_serie = num_serie
+        # self.num_serie = num_serie
 
         super().save(*args, **kwargs)
 
@@ -337,7 +340,7 @@ class Inventory(models.Model):
         on_delete=models.CASCADE
     )
     reference = models.CharField(max_length=10, unique=True, editable=False)
-    num_serie = models.CharField(max_length=6, unique=True, editable=True)
+    num_serie = models.CharField(max_length=6, unique=True, editable=False)
     CONDITION_CHOICES =(
         ('new','New'),
         ('good','Good'),
@@ -353,7 +356,6 @@ class Inventory(models.Model):
     Location = models.ForeignKey(
         Location,
         to_field='name',
-        editable=False,
         on_delete=models.CASCADE
     )
     date_assignment = models.DateField(null=True, editable=False, blank=True)
@@ -376,6 +378,7 @@ class NotificationStudent(models.Model):
 
 class NotificationManager(models.Model):
     message = models.CharField(editable=False, max_length=250)
+    reciever = models.CharField(editable=False, max_length=250, default='')
 
 
 class AllocateEquipements(models.Model):
@@ -432,6 +435,7 @@ class AcceptAllocationRequest(models.Model):
             try:
                 notificationtd = self.Allocation_request
                 allocation_ref = notificationtd.reference
+                # allocator = NotificationStudent.objects.get(id=self.Allocation_request)
                 equipement = Inventory.objects.get(reference=allocation_ref)
 
                 equipement.is_reserved = True
@@ -439,6 +443,7 @@ class AcceptAllocationRequest(models.Model):
 
                 notification = NotificationManager(
                     message = self.message1
+                    # reciever = allocator
                 )
                 notification.save()
                 # notificationtd.delete()

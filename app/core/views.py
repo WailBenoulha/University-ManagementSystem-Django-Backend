@@ -436,6 +436,7 @@ class EquipementApiview(APIView):
 
             serializer = serializers.EquipementSerializer(equipement, data=request.data)
             if serializer.is_valid():
+                equipement.num_serie = serializer.validated_data['num_serie']
                 serializer.save()
                 return Response(
                     {
@@ -730,10 +731,13 @@ class InventoryApiView(APIView):
                 if serializer.is_valid():
                     # Update only the condition field
                     equipement.condition = serializer.validated_data['condition']
+                    equipement.Location = serializer.validated_data['Location']
+                    equipement.num_serie = serializer.validated_data['num_serie']
                     equipement.save()
                     return Response(
                         {
-                            'message': 'the equipement updated successfully'
+                            'message': 'the equipement updated successfully',
+                            'data' : serializer.data
                         },
                         status=status.HTTP_202_ACCEPTED
                     )
