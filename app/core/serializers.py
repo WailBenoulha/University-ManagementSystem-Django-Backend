@@ -145,15 +145,15 @@ class NotificaionStudentSerializer(serializers.ModelSerializer):
 class NotificationManagerSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.NotificationManager
-        fields =('id', 'message')
+        fields =('id', 'message','reciever')
 
 
 class AllocateEquipementsSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.AllocateEquipements
-        fields = ('id', 'Reserved_by', 'reference', 'start_date', 'finish_date', 'purpose', 'Message')
+        fields = ('id', 'Reserved_by', 'reference', 'start_date', 'finish_date', 'purpose', 'Message','status')
 
 class AcceptAllocationRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.AcceptAllocationRequest
-        fields = ('id', 'Allocation_request', 'accept')
+        fields = ('id', 'request', 'accept')

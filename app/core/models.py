@@ -397,6 +397,12 @@ class AllocateEquipements(models.Model):
     finish_date = models.DateField()
     purpose = models.CharField(max_length=250, default='')
     Message = models.CharField(editable=False, max_length=250)
+    STATUS_CHOICES = (
+        ('active','Active'),
+        ('panding','Panding'),
+        ('refuse','Refuse'),
+    )
+    status = models.CharField(choices=STATUS_CHOICES, max_length=250, default='panding', editable=False)
 
     def save(self, *args, **kwargs):
         if self.Reserved_by is None:
@@ -416,49 +422,85 @@ class AllocateEquipements(models.Model):
         )
         notification_to_manager.save()
 
+    def __str__(self):
+        return self.Message
+
 
 class AcceptAllocationRequest(models.Model):
-    Allocation_request = models.ForeignKey(
-        NotificationStudent,
-        on_delete=models.CASCADE
+    request = models.ForeignKey(
+        AllocateEquipements,
+        on_delete=models.CASCADE,
+        limit_choices_to={'status':'Panding'}
     )
     accept = models.BooleanField()
     message1 = models.CharField(editable=False, default='', max_length=250)
     message2 = models.CharField(editable=False, default='', max_length=250)
 
     def save(self, *args, **kwargs):
-        self.message1 = f"the Admin accept your request to allocate {self.Allocation_request.reference}"
-        self.message2 = f"the Admin refuse your request to allocate {self.Allocation_request.reference}"
+        self.message1 = f"the Admin accept your request to allocate {self.request.reference}"
+        self.message2 = f"the Admin refuse your request to allocate {self.request.reference}"
         super().save(*args, **kwargs)
 
         if self.accept == True:
-            try:
-                notificationtd = self.Allocation_request
-                allocation_ref = notificationtd.reference
-                # allocator = NotificationStudent.objects.get(id=self.Allocation_request)
-                equipement = Inventory.objects.get(reference=allocation_ref)
+            allocation_request = AllocateEquipements.objects.get(id=self.request.id)
+            allocation_request.status = 'Active'
+            allocation_request.save()
 
-                equipement.is_reserved = True
-                equipement.save()
+            allocation_ref = allocation_request.reference
+            equipement = Inventory.objects.get(reference=allocation_ref)
+            equipement.is_reserved = True
+            equipement.save()
 
-                notification = NotificationManager(
-                    message = self.message1
-                    # reciever = allocator
-                )
-                notification.save()
-                # notificationtd.delete()
-            except NotificationStudent.DoesNotExist:
-                pass
+            allocator = allocation_request.Reserved_by
+            notification = NotificationManager(
+                    message = self.message1,
+                    reciever = allocator
+            )
+            notification.save()
+
         else:
-            try:
-                notificationstd = NotificationStudent.objects.get(id=self.id)
-                notification2 = NotificationManager(
-                    message = self.message2
-                )
-                notification2.save()
-                notificationstd.delete()
-            except NotificationStudent.DoesNotExist:
-                pass
+            allocation_request = AllocateEquipements.objects.get(id=self.request.id)
+            allocation_request.status = 'Refuse'
+            allocation_request.save()
+            allocator = allocation_request.Reserved_by
+            notification = NotificationManager(
+                    message = self.message2,
+                    reciever = allocator
+            )
+            notification.save()
+
+
+        # if self.accept == True:
+        #     try:
+        #         notificationtd = self.Allocation_request
+        #         allocation_ref = notificationtd.reference
+        #         # allocator = NotificationStudent.objects.get(id=self.Allocation_request)
+        #         equipement = Inventory.objects.get(reference=allocation_ref)
+
+        #         equipement.is_reserved = True
+        #         equipement.save()
+
+        #         notification = NotificationManager(
+        #             message = self.message1
+        #             # reciever = allocator
+        #         )
+        #         notification.save()
+        #         # notificationtd.delete()
+        #     except NotificationStudent.DoesNotExist:
+        #         pass
+        # else:
+        #     try:
+        #         notificationstd = NotificationStudent.objects.get(id=self.id)
+        #         notification2 = NotificationManager(
+        #             message = self.message2
+        #         )
+        #         notification2.save()
+        #         notificationstd.delete()
+        #     except NotificationStudent.DoesNotExist:
+        #         pass
+
+
+
 
 
 # HPC
