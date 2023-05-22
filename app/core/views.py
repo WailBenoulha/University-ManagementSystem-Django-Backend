@@ -1063,28 +1063,65 @@ class AllocateEquipementsApiView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         else:
-
-            data = request.data.copy()
-            data['Reserved_by'] = request.user.id
-            serializer = self.serializer_class(data=data)
-            if serializer.is_valid():
-                    self.perform_create(serializer)
-                    serializer.save()
-                    return Response(
-                        {
-                        'messge' : 'new allocation request created successfuly wait until the admin accept',
-                        'new_request_allocation' : serializer.data
-                        },
-                        status=status.HTTP_201_CREATED
-                    )
+            reference = request.data.get('reference')
+            existing_allocation = models.AllocateEquipements.objects.filter(reference=reference).exists()
+            if existing_allocation:
+                return Response(
+                    {
+                        'message': 'You cant request this equipement because the request allocation of this equipement is already exist'
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             else:
-                    return Response(
-                        {
-                        'message' : 'Allocation request failed',
-                        'errors' : serializer.errors
-                        },
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
+                data = request.data.copy()
+                data['Reserved_by'] = request.user.id
+                serializer = self.serializer_class(data=data)
+                if serializer.is_valid():
+                        self.perform_create(serializer)
+                        serializer.save()
+                        return Response(
+                            {
+                            'messge' : 'new allocation request created successfuly wait until the admin accept',
+                            'new_request_allocation' : serializer.data
+                            },
+                            status=status.HTTP_201_CREATED
+                        )
+                else:
+                        return Response(
+                            {
+                            'message' : 'Allocation request failed',
+                            'errors' : serializer.errors
+                            },
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+
+    def delete(self, request, pk=None):
+        if pk:
+            try:
+                notif = models.AllocateEquipements.objects.get(pk=pk)
+            except models.AllocateEquipements.DoesNotExist:
+                return Response(
+                    {
+                    'message' : 'the allocation request that you tryna access is not exist'
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            notif.delete()
+            return Response(
+                {
+                'message' : 'the allocation request deleted successfuly'
+                },
+                status=status.HTTP_204_NO_CONTENT
+            )
+        else:
+            notif = models.AllocateEquipements.objects.all()
+            notif.delete()
+            return Response(
+                {
+                'message' : 'all the allocations requestes deleted successfully'
+                },
+                status=status.HTTP_204_NO_CONTENT
+            )
 
     def perform_create(self, serializer):
         serializer.save(Reserved_by=self.request.user)
