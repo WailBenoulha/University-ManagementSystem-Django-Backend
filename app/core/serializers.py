@@ -153,22 +153,25 @@ class AllocateEquipementsSerializer(serializers.ModelSerializer):
         queryset=models.Inventory.objects.filter(Location__type='reservation_room', is_reserved=False),
         slug_field='reference'
     )
+    reference_details = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = models.AllocateEquipements
-        fields = ('id', 'Reserved_by', 'reference', 'start_date', 'finish_date', 'purpose', 'Message','status')
+        fields = ('id', 'Reserved_by', 'reference', 'reference_details', 'start_date', 'finish_date', 'purpose', 'Message','status')
 
 
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        reference = models.Inventory.objects.get(reference=representation['reference'])
-        representation['reference'] = {
+    def get_reference_details(self, obj):
+        reference = obj.reference
+        return {
             'name': reference.name,
             'brand': reference.brand,
             'model': reference.model
         }
-        return representation
 
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['reference_details'] = self.get_reference_details(instance)
+        return representation
 
 class AcceptAllocationRequestSerializer(serializers.ModelSerializer):
     class Meta:

@@ -1063,6 +1063,7 @@ class AllocateEquipementsApiView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         else:
+
             data = request.data.copy()
             data['Reserved_by'] = request.user.id
             serializer = self.serializer_class(data=data)

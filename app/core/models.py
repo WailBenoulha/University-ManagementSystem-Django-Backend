@@ -468,7 +468,7 @@ class AcceptAllocationRequest(models.Model):
                     reciever = allocator
             )
             notification.save()
-            allocation_request.delete()
+            allocation_request.delete
 
 
         # if self.accept == True:
