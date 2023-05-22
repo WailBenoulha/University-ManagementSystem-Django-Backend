@@ -340,7 +340,7 @@ class Inventory(models.Model):
         on_delete=models.CASCADE
     )
     reference = models.CharField(max_length=10, unique=True, editable=False)
-    num_serie = models.CharField(max_length=6, unique=True, editable=False)
+    num_serie = models.CharField(max_length=6, unique=True, editable=True)
     CONDITION_CHOICES =(
         ('new','New'),
         ('good','Good'),
