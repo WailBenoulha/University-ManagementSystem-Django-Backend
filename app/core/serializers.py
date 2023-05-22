@@ -149,9 +149,26 @@ class NotificationManagerSerializer(serializers.ModelSerializer):
 
 
 class AllocateEquipementsSerializer(serializers.ModelSerializer):
+    reference = serializers.SlugRelatedField(
+        queryset=models.Inventory.objects.filter(Location__type='reservation_room', is_reserved=False),
+        slug_field='reference'
+    )
+
     class Meta:
         model = models.AllocateEquipements
         fields = ('id', 'Reserved_by', 'reference', 'start_date', 'finish_date', 'purpose', 'Message','status')
+
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        reference = models.Inventory.objects.get(reference=representation['reference'])
+        representation['reference'] = {
+            'name': reference.name,
+            'brand': reference.brand,
+            'model': reference.model
+        }
+        return representation
+
 
 class AcceptAllocationRequestSerializer(serializers.ModelSerializer):
     class Meta:

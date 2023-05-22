@@ -460,14 +460,15 @@ class AcceptAllocationRequest(models.Model):
 
         else:
             allocation_request = AllocateEquipements.objects.get(id=self.request.id)
-            allocation_request.status = 'Refuse'
-            allocation_request.save()
+            # allocation_request.status = 'Refuse'
+            # allocation_request.save()
             allocator = allocation_request.Reserved_by
             notification = NotificationManager(
                     message = self.message2,
                     reciever = allocator
             )
             notification.save()
+            allocation_request.delete()
 
 
         # if self.accept == True:
