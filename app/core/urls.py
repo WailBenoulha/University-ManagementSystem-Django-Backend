@@ -38,5 +38,7 @@ urlpatterns = [
     path('notificationmng', views.NotificationManagerApiView.as_view()),
     path('notificationmng/<int:pk>/', views.NotificationManagerApiView.as_view()),
     path('reserved/', views.ReservedEquipementsApiView.as_view()),
-    path('reserved/<int:pk>', views.ReservedEquipementsApiView.as_view())
+    path('reserved/<int:pk>', views.ReservedEquipementsApiView.as_view()),
+    path('return/', views.ReturnEquipementApiView.as_view()),
+    path('return/<int:pk>', views.ReturnEquipementApiView.as_view())
 ]

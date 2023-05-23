@@ -151,6 +151,7 @@ class Equipement(models.Model):
     discription = models.CharField(default='', max_length=250)
     image = models.ImageField(upload_to='images/', default='')
     is_reserved = models.BooleanField(default=False, editable=False)
+    is_requested = models.BooleanField(default=False, editable=False)
 
     def save(self, *args, **kwargs):
         # Generate a unique reference number
@@ -166,12 +167,12 @@ class Equipement(models.Model):
             self.reference = ref
 
         # Generate a unique num_serie
-        # while True:
-        #     num_serie = str(random.randint(100000, 999999))
-        #     if not Equipement.objects.filter(num_serie=num_serie).exists():
-        #         break
+        while True:
+            num_serie = str(random.randint(100000, 999999))
+            if not Equipement.objects.filter(num_serie=num_serie).exists():
+                break
 
-        # self.num_serie = num_serie
+        self.num_serie = num_serie
 
         super().save(*args, **kwargs)
 
@@ -215,6 +216,7 @@ class Stock(models.Model):
     discription = models.CharField(default='', max_length=250)
     image = models.ImageField(upload_to='images/', default='')
     is_reserved = models.BooleanField(default=False, editable=False)
+    is_requested = models.BooleanField(default=False, editable=False)
 
     def save(self, *args, **kwargs):
 
@@ -247,7 +249,8 @@ class Stock(models.Model):
                 date_assignment=self.date_assignment,
                 discription=self.discription,
                 image=self.image,
-                is_reserved=self.is_reserved
+                is_reserved=self.is_reserved,
+                is_requested=self.is_requested
             )
             equipement.save()
 
@@ -362,6 +365,7 @@ class Inventory(models.Model):
     discription = models.CharField(default='', max_length=250)
     image = models.ImageField(upload_to='images/', default='')
     is_reserved = models.BooleanField(default=False, editable=False)
+    is_requested = models.BooleanField(default=False, editable=False)
 
     def __str__(self):
         return self.reference
@@ -390,7 +394,7 @@ class AllocateEquipements(models.Model):
     reference = models.ForeignKey(
         Inventory,
         on_delete=models.CASCADE,
-        limit_choices_to={'Location__type':'reservation_room', 'is_reserved': False},
+        limit_choices_to={'Location__type':'reservation_room', 'is_reserved': False, 'is_requested': False},
         to_field='reference'
     )
     start_date = models.DateField()
@@ -412,6 +416,10 @@ class AllocateEquipements(models.Model):
         user = User.objects.get(id=ref.id)
         self.Message = f"{user.name} {user.lastname} asked to allocate the equipement {self.reference.name} {self.reference.brand} {self.reference.model} {self.reference.reference} at the startdate {self.start_date} and the finishdate {self.finish_date}"
         super().save(*args, **kwargs)
+
+        equip = Inventory.objects.get(reference=self.reference)
+        equip.is_requested = True
+        equip.save()
 
         ref = self.reference
         equipement = Inventory.objects.get(id=ref.id)
@@ -462,13 +470,33 @@ class AcceptAllocationRequest(models.Model):
             allocation_request = AllocateEquipements.objects.get(id=self.request.id)
             # allocation_request.status = 'Refuse'
             # allocation_request.save()
+            allocation_ref = allocation_request.reference
+            equipement = Inventory.objects.get(reference=allocation_ref)
+            equipement.is_requested = False
+            equipement.save()
+
             allocator = allocation_request.Reserved_by
             notification = NotificationManager(
                     message = self.message2,
                     reciever = allocator
             )
             notification.save()
-            allocation_request.delete
+            allocation_request.delete()
+
+class ReturnEquipement(models.Model):
+    reference = models.ForeignKey(
+        Inventory,
+        on_delete=models.CASCADE,
+        limit_choices_to={'Location__type':'reservation_room', 'is_reserved': True, 'is_requested': True},
+        to_field='reference'
+    )
+
+    def save(self, *args, **kwargs):
+        equip = Inventory.objects.get(id=self.reference.id)
+        equip.is_reserved = False
+        equip.is_requested = False
+        equip.save()
+
 
 
         # if self.accept == True:

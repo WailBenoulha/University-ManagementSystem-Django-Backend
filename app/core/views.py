@@ -1073,27 +1073,37 @@ class AllocateEquipementsApiView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             else:
-                data = request.data.copy()
-                data['Reserved_by'] = request.user.id
-                serializer = self.serializer_class(data=data)
-                if serializer.is_valid():
-                        self.perform_create(serializer)
-                        serializer.save()
-                        return Response(
-                            {
-                            'messge' : 'new allocation request created successfuly wait until the admin accept',
-                            'new_request_allocation' : serializer.data
-                            },
-                            status=status.HTTP_201_CREATED
-                        )
+                reference2 = request.data.get('reference')
+                equip = models.Inventory.objects.get(reference=reference2)
+                if equip.is_requested == True:
+                    return Response(
+                        {
+                            'message': 'this equipement already requested for allocation choose another one'
+                        },
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
                 else:
-                        return Response(
-                            {
-                            'message' : 'Allocation request failed',
-                            'errors' : serializer.errors
-                            },
-                            status=status.HTTP_400_BAD_REQUEST
-                        )
+                    data = request.data.copy()
+                    data['Reserved_by'] = request.user.id
+                    serializer = self.serializer_class(data=data)
+                    if serializer.is_valid():
+                            self.perform_create(serializer)
+                            serializer.save()
+                            return Response(
+                                {
+                                'messge' : 'new allocation request created successfuly wait until the admin accept',
+                                'new_request_allocation' : serializer.data
+                                },
+                                status=status.HTTP_201_CREATED
+                            )
+                    else:
+                            return Response(
+                                {
+                                'message' : 'Allocation request failed',
+                                'errors' : serializer.errors
+                                },
+                                status=status.HTTP_400_BAD_REQUEST
+                            )
 
     def delete(self, request, pk=None):
         if pk:
@@ -1125,3 +1135,66 @@ class AllocateEquipementsApiView(APIView):
 
     def perform_create(self, serializer):
         serializer.save(Reserved_by=self.request.user)
+
+
+class ReturnEquipementApiView(APIView):
+    serializer_class = serializers.ReturnEquipementSerializer
+    queryset = models.ReturnEquipement.objects.all()
+
+    # def get_permissions(self):
+    #     if self.request.method == 'GET':
+    #         return [IsAdmin()]
+    #     elif self.request.method == 'POST':
+    #         return [IsAdmin()]
+    #     elif self.request.method == 'PUT':
+    #         return [IsAdmin()]
+    #     elif self.request.method == 'DELETE':
+    #         return [IsAdmin()]
+    #     else:
+    #         return []
+
+    def get(self, request, pk=None):
+        if pk:
+            try:
+                categorie = models.ReturnEquipement.objects.get(pk=pk)
+            except models.ReturnEquipement.DoesNotExist:
+                return Response(
+                    {
+                    'message' : 'the opperation that you tryna access is not exist'
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            serializer = serializers.ReturnEquipementSerializer(categorie)
+            return Response(serializer.data)
+        else:
+            categorie = models.ReturnEquipement.objects.all()
+            serializer = serializers.ReturnEquipementSerializer(categorie, many=True)
+            return Response(serializer.data)
+
+    def post(self, request, pk=None):
+        serializer = self.serializer_class(data=request.data)
+        if pk:
+            return Response(
+                {
+                    'message' : 'Invalid opperation'
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        else:
+            if serializer.is_valid():
+                serializer.save()
+                return Response(
+                    {
+                    'message' : 'equipement returned successfully to the available allocation list',
+                    'opperation' : serializer.data
+                    },
+                    status= status.HTTP_201_CREATED
+                )
+            else:
+                return Response(
+                    {
+                    'message' : 'Invalid',
+                    'errors' : serializer.errors
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
