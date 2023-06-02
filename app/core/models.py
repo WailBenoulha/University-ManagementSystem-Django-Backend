@@ -61,6 +61,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)
+    image = models.ImageField(upload_to='images/', default='')
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['name','lastname','phonenumber','national_card_number','address']
@@ -528,7 +529,51 @@ class ReturnEquipement(models.Model):
         #     except NotificationStudent.DoesNotExist:
         #         pass
 
+class AllocateHPC(models.Model):
+    Reserved_by = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        editable=False
+    )
+    reference = models.ForeignKey(
+        Inventory,
+        on_delete=models.CASCADE,
+        limit_choices_to={'Location__type':'it_room', 'is_reserved': False, 'is_requested': False},
+        to_field='reference'
+    )
+    start_date = models.DateTimeField()
+    finish_time = models.DateTimeField(editable=False)
+    purpose = models.CharField(max_length=250, default='')
+    Message = models.CharField(editable=False, max_length=250)
 
+    def save(self, *args, **kwargs):
+
+        if self.Reserved_by is None:
+            # Assign the authenticated user if not already set
+            self.Reserved_by = self.request.user
+        ref = self.Reserved_by
+        user = User.objects.get(id=ref.id)
+        self.Message = f"{user.name} {user.lastname} allocate the equipement {self.reference.name} {self.reference.brand} {self.reference.model} {self.reference.reference} at the startdate {self.start_date} and the finishdate {self.finish_time}"
+        self.finish_time = self.start_date + timedelta(hours=2)
+        super().save(*args, **kwargs)
+
+
+
+        equip = Inventory.objects.get(reference=self.reference)
+        equip.is_reserved = True
+        equip.save()
+
+        ref = self.reference
+        equipement = Inventory.objects.get(id=ref.id)
+        notification_to_manager = NotificationStudent(
+            message = self.Message,
+            reference = equipement.reference,
+            send_by = self.Reserved_by
+        )
+        notification_to_manager.save()
+
+    def __str__(self):
+        return self.Message
 
 
 

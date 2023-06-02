@@ -2,6 +2,8 @@ from django.urls import path, include
 from rest_framework.urlpatterns import format_suffix_patterns
 from core import views
 from rest_framework.routers import DefaultRouter
+from django.conf import settings
+from django.conf.urls.static import static
 
 router = DefaultRouter()
 router.register(r'users', views.UserViewsets, basename='profiles-user')
@@ -13,6 +15,7 @@ router.register(r'Researcher', views.ResearcherViewsets, basename='profiles-rese
 
 
 urlpatterns = [
+    *static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT),
     path('profiles/', include(router.urls)),
     path('login/', views.UserLoginApiView.as_view()),
     path('location/', views.LoacationApiView.as_view()),
@@ -40,5 +43,9 @@ urlpatterns = [
     path('reserved/', views.ReservedEquipementsApiView.as_view()),
     path('reserved/<int:pk>', views.ReservedEquipementsApiView.as_view()),
     path('return/', views.ReturnEquipementApiView.as_view()),
-    path('return/<int:pk>', views.ReturnEquipementApiView.as_view())
-]
+    path('return/<int:pk>', views.ReturnEquipementApiView.as_view()),
+    path('allocatehpc/', views.AllocateHPCApiView.as_view()),
+    path('allocatehpc/<int:pk>', views.AllocateHPCApiView.as_view()),
+    path('reservedhpc/', views.ReservedHPCApiView.as_view()),
+    path('reservedhpc/<int:pk>', views.ReservedHPCApiView.as_view()),
+]+ static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)

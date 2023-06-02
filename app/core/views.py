@@ -1136,6 +1136,139 @@ class AllocateEquipementsApiView(APIView):
     def perform_create(self, serializer):
         serializer.save(Reserved_by=self.request.user)
 
+class AllocateHPCApiView(APIView):
+    queryset = models.AllocateHPC.objects.all()
+    serializer_class = serializers.AllocateHPCSerializer
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsResearcher()]
+        elif self.request.method == 'POST':
+            return [IsResearcher()]
+        elif self.request.method == 'DELETE':
+            return [IsResearcher()]
+        else:
+            return []
+
+
+
+    def get(self, request, pk=None):
+        if pk:
+            try:
+                allocate = models.AllocateHPC.objects.get(pk=pk)
+            except models.AllocateHPC.DoesNotExist:
+                return Response(
+                    {
+                    'message' : 'the allocation opperation that you tryna access is not exist'
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            serializer = serializers.AllocateHPCSerializer(allocate)
+            return Response(serializer.data)
+        else:
+            allocate = models.AllocateHPC.objects.all()
+            serializer = serializers.AllocateHPCSerializer(allocate, many=True)
+            return Response(serializer.data)
+
+    def post(self, request):
+        serializer = serializers.AllocateHPCSerializer(data=request.data)
+
+        if request.data.get('reference') is None:
+            return Response(
+                {
+                    'meassage' : 'there is no equipement to allocate'
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        else:
+            reference = request.data.get('reference')
+
+            data = request.data.copy()
+            data['Reserved_by'] = request.user.id
+            serializer = self.serializer_class(data=data)
+            if serializer.is_valid():
+                    self.perform_create(serializer)
+                    serializer.save()
+                    return Response(
+                        {
+                        'messge' : 'new reservation successfully',
+                        'new_request_allocation' : serializer.data
+                        },
+                        status=status.HTTP_201_CREATED
+                    )
+            else:
+                    return Response(
+                        {
+                        'message' : 'Allocation request failed',
+                        'errors' : serializer.errors
+                        },
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+    def delete(self, request, pk=None):
+        if pk:
+            try:
+                notif = models.AllocateHPC.objects.get(pk=pk)
+            except models.AllocateHPC.DoesNotExist:
+                return Response(
+                    {
+                    'message' : 'the allocation request that you tryna access is not exist'
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            notif.delete()
+            return Response(
+                {
+                'message' : 'the allocation request deleted successfuly'
+                },
+                status=status.HTTP_204_NO_CONTENT
+            )
+        else:
+            notif = models.AllocateHPC.objects.all()
+            notif.delete()
+            return Response(
+                {
+                'message' : 'all the allocations requestes deleted successfully'
+                },
+                status=status.HTTP_204_NO_CONTENT
+            )
+
+    def perform_create(self, serializer):
+        serializer.save(Reserved_by=self.request.user)
+
+
+class ReservedHPCApiView(APIView):
+    serializer_class = serializers.InventorySerializer
+
+    # def get_permissions(self):
+    #     if self.request.method == 'GET':
+    #         return [IsAllocationManagerOrIsStudentOrIsResearcher()]
+    #     elif self.request.method == 'DELETE':
+    #         return [IsAllocationManagerOrIsStudentOrIsResearcher()]
+    #     else:
+    #         return []
+
+    def get(self, request, pk=None):
+        if pk:
+            try:
+                typelocation = models.Location.objects.get(type='it_room')
+                equip = models.Inventory.objects.get(Location=typelocation, pk=pk, is_reserved=True)
+            except models.Inventory.DoesNotExist:
+                return Response(
+                    {
+                    'message' : 'the equipement that you tryna access is not exist'
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            serializer = serializers.InventorySerializer(equip)
+            return Response(serializer.data)
+        else:
+            typelocation = models.Location.objects.filter(type='it_room')
+            equip = models.Inventory.objects.filter(Location__in=typelocation,  is_reserved=True)
+            serializer = serializers.InventorySerializer(equip, many=True)
+            return Response(serializer.data)
+
+
 
 class ReturnEquipementApiView(APIView):
     serializer_class = serializers.ReturnEquipementSerializer

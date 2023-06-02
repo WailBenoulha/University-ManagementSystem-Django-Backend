@@ -144,3 +144,6 @@ REST_FRAMEWORK = {
 
 SESSION_COOKIE_DOMAIN = 'localhost'
 SESSION_COOKIE_SECURE = False
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'

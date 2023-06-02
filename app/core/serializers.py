@@ -183,3 +183,28 @@ class ReturnEquipementSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.ReturnEquipement
         fields = ('id', 'reference')
+
+class AllocateHPCSerializer(serializers.ModelSerializer):
+    reference = serializers.SlugRelatedField(
+        queryset=models.Inventory.objects.filter(Location__type='it_room', is_reserved=False),
+        slug_field='reference'
+    )
+    reference_details = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = models.AllocateHPC
+        fields = ('id', 'Reserved_by', 'reference', 'reference_details', 'start_date', 'finish_time', 'purpose', 'Message')
+
+
+    def get_reference_details(self, obj):
+        reference = obj.reference
+        return {
+            'name': reference.name,
+            'brand': reference.brand,
+            'model': reference.model
+        }
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['reference_details'] = self.get_reference_details(instance)
+        return representation
