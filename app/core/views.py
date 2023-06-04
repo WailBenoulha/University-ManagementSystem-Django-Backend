@@ -24,6 +24,9 @@ from django.contrib.sessions.backends.db import SessionStore
 from django.db import transaction
 from django.db import IntegrityError
 
+from django.core.files.storage import default_storage
+import base64
+
 class UserViewsets(viewsets.ModelViewSet):
     serializer_class = serializers.UserSerializer
     queryset = models.User.objects.all()
@@ -72,6 +75,24 @@ class UserLoginApiView(ObtainAuthToken):
             session = self.create_session(request, user)
             response.set_cookie('sessionid', session.session_key)
 
+            image_file = request.FILES.get('images')
+            if image_file:
+                # Generate a unique file name
+                file_name = default_storage.get_available_name(image_file.name)
+                # Save the file to the media directory
+                file_path = default_storage.save(os.path.join('images', file_name), image_file)
+                # Assign the file path to the user's image attribute
+                user.image = file_path
+
+            # Save the user
+            user.save()
+
+            # Encode image as base64 string
+            image_base64 = ''
+            if user.image:
+                with open(user.image.path, 'rb') as image_file:
+                    image_base64 = base64.b64encode(image_file.read()).decode('utf-8')
+
             data = {
                 'token': token,
                 'role': user.role,
@@ -81,6 +102,7 @@ class UserLoginApiView(ObtainAuthToken):
                 'phonenumber': user.phonenumber,
                 'national_card_number': user.national_card_number,
                 'address': user.address,
+                'image': image_base64,
             }
             return Response(data, status=status.HTTP_200_OK)
         else:
