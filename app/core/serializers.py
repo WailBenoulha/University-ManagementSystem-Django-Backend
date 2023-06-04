@@ -4,13 +4,13 @@ from core import models
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.User
-        fields = ('id','password', 'email', 'name', 'lastname', 'phonenumber', 'national_card_number', 'address', 'role')
+        fields = ('id','password', 'email', 'name', 'lastname', 'phonenumber', 'national_card_number', 'address', 'role', 'image')
 
 
 class AdminSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.User
-        fields = ('id','password', 'email', 'name', 'lastname', 'phonenumber', 'national_card_number', 'address')
+        fields = ('id','password', 'email', 'name', 'lastname', 'phonenumber', 'national_card_number', 'address', 'image')
 
     def create(self, validated_data):
         user = models.User.objects.create_user(
@@ -21,7 +21,8 @@ class AdminSerializer(serializers.ModelSerializer):
             lastname=validated_data['lastname'],
             phonenumber=validated_data['phonenumber'],
             national_card_number=validated_data['national_card_number'],
-            address=validated_data['address']
+            address=validated_data['address'],
+            image=validated_data['image']
         )
 
         return user
@@ -30,7 +31,7 @@ class AdminSerializer(serializers.ModelSerializer):
 class PrincipalmanagerSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.User
-        fields = ('id','password', 'email', 'name', 'lastname', 'phonenumber', 'national_card_number', 'address')
+        fields = ('id','password', 'email', 'name', 'lastname', 'phonenumber', 'national_card_number', 'address', 'image')
 
     def create(self, validated_data):
         user = models.User.objects.create_user(
@@ -41,7 +42,8 @@ class PrincipalmanagerSerializer(serializers.ModelSerializer):
             lastname=validated_data['lastname'],
             phonenumber=validated_data['phonenumber'],
             national_card_number=validated_data['national_card_number'],
-            address=validated_data['address']
+            address=validated_data['address'],
+            image=validated_data['image']
         )
 
         return user
@@ -49,7 +51,7 @@ class PrincipalmanagerSerializer(serializers.ModelSerializer):
 class AllocationmanagerSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.User
-        fields = ('id','password', 'email', 'name', 'lastname', 'phonenumber', 'national_card_number', 'address')
+        fields = ('id','password', 'email', 'name', 'lastname', 'phonenumber', 'national_card_number', 'address', 'image')
 
     def create(self, validated_data):
         user = models.User.objects.create_user(
@@ -60,7 +62,8 @@ class AllocationmanagerSerializer(serializers.ModelSerializer):
             lastname=validated_data['lastname'],
             phonenumber=validated_data['phonenumber'],
             national_card_number=validated_data['national_card_number'],
-            address=validated_data['address']
+            address=validated_data['address'],
+            image=validated_data['image']
         )
 
         return user
@@ -68,7 +71,7 @@ class AllocationmanagerSerializer(serializers.ModelSerializer):
 class StudentSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.User
-        fields = ('id','password', 'email', 'name', 'lastname', 'phonenumber', 'national_card_number', 'address')
+        fields = ('id','password', 'email', 'name', 'lastname', 'phonenumber', 'national_card_number', 'address', 'image')
 
     def create(self, validated_data):
         user = models.User.objects.create_user(
@@ -79,7 +82,8 @@ class StudentSerializer(serializers.ModelSerializer):
             lastname=validated_data['lastname'],
             phonenumber=validated_data['phonenumber'],
             national_card_number=validated_data['national_card_number'],
-            address=validated_data['address']
+            address=validated_data['address'],
+            image=validated_data['image']
         )
 
         return user
@@ -87,7 +91,7 @@ class StudentSerializer(serializers.ModelSerializer):
 class ResearcherSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.User
-        fields = ('id','password', 'email', 'name', 'lastname', 'phonenumber', 'national_card_number', 'address')
+        fields = ('id','password', 'email', 'name', 'lastname', 'phonenumber', 'national_card_number', 'address', 'image')
 
     def create(self, validated_data):
         user = models.User.objects.create_user(
@@ -98,7 +102,8 @@ class ResearcherSerializer(serializers.ModelSerializer):
             lastname=validated_data['lastname'],
             phonenumber=validated_data['phonenumber'],
             national_card_number=validated_data['national_card_number'],
-            address=validated_data['address']
+            address=validated_data['address'],
+            image=validated_data['image']
         )
 
         return user
