@@ -16,6 +16,7 @@ router.register(r'Researcher', views.ResearcherViewsets, basename='profiles-rese
 
 urlpatterns = [
     *static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT),
+    # path('connecteduser/', views.ConnectedUserView.as_view(), name='connected-user'),
     path('profiles/', include(router.urls)),
     path('login/', views.UserLoginApiView.as_view()),
     path('location/', views.LoacationApiView.as_view()),

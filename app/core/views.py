@@ -1,3 +1,4 @@
+from django.forms import ValidationError
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, generics
@@ -24,36 +25,76 @@ from django.contrib.sessions.backends.db import SessionStore
 from django.db import transaction
 from django.db import IntegrityError
 
+from core.serializers import UserSerializer
+
+
 from django.core.files.storage import default_storage
 import base64
 
 class UserViewsets(viewsets.ModelViewSet):
     serializer_class = serializers.UserSerializer
     queryset = models.User.objects.all()
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except ValidationError as e:
+            errors = e.message_dict
+            return Response({'error': errors}, status=status.HTTP_400_BAD_REQUEST)
 
 class AdminViewsets(viewsets.ModelViewSet):
     serializer_class = serializers.AdminSerializer
     queryset = models.User.objects.filter(role='Admin')
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except ValidationError as e:
+            errors = e.message_dict
+            return Response({'error': errors}, status=status.HTTP_400_BAD_REQUEST)
     # authentication_classes = (TokenAuthentication,)
     # permission_classes = (permissions.UpdateOwnProfile,)
 
 class PrincipalmanagerViewsets(viewsets.ModelViewSet):
     serializer_class = serializers.PrincipalmanagerSerializer
     queryset = models.User.objects.filter(role='Principalmanager')
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except ValidationError as e:
+            errors = e.message_dict
+            return Response({'error': errors}, status=status.HTTP_400_BAD_REQUEST)
 
 class AllocationmanagerViewsets(viewsets.ModelViewSet):
     serializer_class = serializers.AllocationmanagerSerializer
     queryset = models.User.objects.filter(role='Allocationmanager')
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except ValidationError as e:
+            errors = e.message_dict
+            return Response({'error': errors}, status=status.HTTP_400_BAD_REQUEST)
 
 class StudentViewsets(viewsets.ModelViewSet):
     serializer_class = serializers.StudentSerializer
     queryset = models.User.objects.filter(role='Student')
+
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except ValidationError as e:
+            errors = e.message_dict
+            return Response({'error': errors}, status=status.HTTP_400_BAD_REQUEST)
     # authentication_classes = (TokenAuthentication,)
     # permission_classes = [IsStudent]
 
 class ResearcherViewsets(viewsets.ModelViewSet):
     serializer_class = serializers.ResearcherSerializer
     queryset = models.User.objects.filter(role='Researcher')
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except ValidationError as e:
+            errors = e.message_dict
+            return Response({'error': errors}, status=status.HTTP_400_BAD_REQUEST)
     # authentication_classes = (TokenAuthentication,)
     # permission_classes = [IsResearcher | IsAdmin]
 
@@ -93,6 +134,8 @@ class UserLoginApiView(ObtainAuthToken):
                 with open(user.image.path, 'rb') as image_file:
                     image_base64 = base64.b64encode(image_file.read()).decode('utf-8')
 
+            # user.image = 'images/'
+
             data = {
                 'token': token,
                 'role': user.role,
@@ -124,6 +167,14 @@ class UserLoginApiView(ObtainAuthToken):
         session['role'] = user.role
         session.save()
         return session
+
+# class ConnectedUserView(APIView):
+#     permission_classes = [IsAuthenticated]
+
+#     def get(self, request):
+#         user = request.user
+#         serializer = UserSerializer(user)
+#         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class Categorie_EquipementApiView(APIView):

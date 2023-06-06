@@ -5,6 +5,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.core.validators import RegexValidator
 from django.core.validators import MinValueValidator
+from django.core.validators import MaxValueValidator
 from django.core.exceptions import ValidationError
 from django.db.models.query import QuerySet
 from django.dispatch import receiver
@@ -12,6 +13,8 @@ from django.utils import timezone
 from django.conf import settings
 from django.db.models.signals import post_save
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
+from django.core.validators import MinLengthValidator, MaxLengthValidator
 
 from django.conf import settings
 
@@ -20,6 +23,10 @@ class CustomUserManager(BaseUserManager):
         if not email:
             raise ValueError('The Email field must be set')
         email = self.normalize_email(email)
+
+        if password and len(password) < 8:
+            raise ValidationError({'password': ['The password must be at least 8 characters long']})
+
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
@@ -55,13 +62,17 @@ class User(AbstractBaseUser, PermissionsMixin):
         message = "Phone number must start with '06', '05', '07', or '03' and have 10 digits"
     )
     phonenumber = models.CharField(validators = [phone_regex], max_length=20)
-    national_card_number = models.IntegerField()
+    national_regex = RegexValidator(
+        regex=r'^\d{18}$',
+        message="The national card number should have 18 digits."
+    )
+    national_card_number = models.BigIntegerField(validators=[national_regex])
     address = models.CharField(max_length=250)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)
-    image = models.ImageField(upload_to='images/', default='')
+    image = models.ImageField(upload_to='images/')
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['name','lastname','phonenumber','national_card_number','address']
