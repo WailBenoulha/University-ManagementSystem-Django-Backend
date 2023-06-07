@@ -123,7 +123,7 @@ class LocationSerializer(serializers.ModelSerializer):
 class EquipementSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Equipement
-        fields = ('id', 'created_by', 'name', 'brand', 'model', 'categorie', 'reference', 'num_serie', 'condition', 'facture_number', 'date_purchase', 'Location', 'date_assignment','discription', 'image', 'is_reserved', 'is_requested')
+        fields = ('id', 'created_by', 'name', 'brand', 'model', 'categorie', 'reference', 'num_serie', 'condition', 'facture_number', 'date_purchase', 'Location', 'date_assignment','discription', 'image', 'qr_code', 'is_reserved', 'is_requested')
 
 class StockSerializer(serializers.ModelSerializer):
     class Meta:

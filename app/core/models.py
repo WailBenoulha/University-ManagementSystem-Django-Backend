@@ -18,6 +18,12 @@ from django.core.validators import MinLengthValidator, MaxLengthValidator
 
 from django.conf import settings
 
+import qrcode
+from io import BytesIO
+from django.core.files import File
+
+
+
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
@@ -162,6 +168,7 @@ class Equipement(models.Model):
     date_assignment = models.DateField(null=True, editable=False, blank=True)
     discription = models.CharField(default='', max_length=250)
     image = models.ImageField(upload_to='images/', default='')
+    qr_code = models.ImageField(upload_to='qr_codes/', blank=True)
     is_reserved = models.BooleanField(default=False, editable=False)
     is_requested = models.BooleanField(default=False, editable=False)
 
@@ -177,6 +184,18 @@ class Equipement(models.Model):
                 if not Equipement.objects.filter(reference=ref).exists():
                     break
             self.reference = ref
+
+        # Generate and save the QR code
+        qr = qrcode.QRCode(version=1, box_size=10, border=5)
+        qr.add_data(self.reference)
+        qr.make(fit=True)
+        img = qr.make_image(fill="black", back_color="white")
+
+        # Save the QR code image
+        buffer = BytesIO()
+        img.save(buffer, format='PNG')
+        filename = f"qr_{self.reference}.png"
+        self.qr_code.save(filename, File(buffer), save=False)
 
         # Generate a unique num_serie
         while True:
@@ -227,6 +246,7 @@ class Stock(models.Model):
     quantite = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     discription = models.CharField(default='', max_length=250)
     image = models.ImageField(upload_to='images/', default='')
+    qr_code = models.ImageField(upload_to='qr_codes/', blank=True, editable=False)
     is_reserved = models.BooleanField(default=False, editable=False)
     is_requested = models.BooleanField(default=False, editable=False)
 
@@ -261,6 +281,7 @@ class Stock(models.Model):
                 date_assignment=self.date_assignment,
                 discription=self.discription,
                 image=self.image,
+                qr_code=self.qr_code,
                 is_reserved=self.is_reserved,
                 is_requested=self.is_requested
             )
@@ -310,6 +331,7 @@ class Affectation(models.Model):
                 date_assignment=self.date_assignment,
                 discription=equipement.discription,
                 image=equipement.image,
+                qr_code=equipement.qr_code,
                 is_reserved=equipement.is_reserved
             )
             inventory_equipement.save()
@@ -376,6 +398,7 @@ class Inventory(models.Model):
     date_assignment = models.DateField(null=True, editable=False, blank=True)
     discription = models.CharField(default='', max_length=250)
     image = models.ImageField(upload_to='images/', default='')
+    qr_code = models.ImageField(upload_to='qr_codes/', blank=True)
     is_reserved = models.BooleanField(default=False, editable=False)
     is_requested = models.BooleanField(default=False, editable=False)
 
