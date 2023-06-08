@@ -189,6 +189,11 @@ class ReturnEquipementSerializer(serializers.ModelSerializer):
         model = models.ReturnEquipement
         fields = ('id', 'reference')
 
+class ReturnEquipementhpcSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.ReturnEquipementhpc
+        fields = ('id', 'reference')
+
 class AllocateHPCSerializer(serializers.ModelSerializer):
     reference = serializers.SlugRelatedField(
         queryset=models.Inventory.objects.filter(Location__type='it_room', is_reserved=False),

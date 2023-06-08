@@ -45,6 +45,8 @@ urlpatterns = [
     path('reserved/<int:pk>', views.ReservedEquipementsApiView.as_view()),
     path('return/', views.ReturnEquipementApiView.as_view()),
     path('return/<int:pk>', views.ReturnEquipementApiView.as_view()),
+    path('returnhpc/', views.ReturnEquipementhpcApiView.as_view()),
+    path('returnhpc/<int:pk>', views.ReturnEquipementhpcApiView.as_view()),
     path('allocatehpc/', views.AllocateHPCApiView.as_view()),
     path('allocatehpc/<int:pk>', views.AllocateHPCApiView.as_view()),
     path('reservedhpc/', views.ReservedHPCApiView.as_view()),

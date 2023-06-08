@@ -563,6 +563,22 @@ class ReturnEquipement(models.Model):
         #     except NotificationStudent.DoesNotExist:
         #         pass
 
+
+class ReturnEquipementhpc(models.Model):
+    reference = models.ForeignKey(
+        Inventory,
+        on_delete=models.CASCADE,
+        limit_choices_to={'Location__type':'it_room', 'is_reserved': True},
+        to_field='reference'
+    )
+
+    def save(self, *args, **kwargs):
+        equip = Inventory.objects.get(id=self.reference.id)
+        equip.is_reserved = False
+        equip.is_requested = False
+        equip.save()
+
+
 class AllocateHPC(models.Model):
     Reserved_by = models.ForeignKey(
         User,
