@@ -579,6 +579,22 @@ class ReturnEquipementhpc(models.Model):
         equip.save()
 
 
+class ConvertRequestedEq(models.Model):
+    reference = models.ForeignKey(
+        Inventory,
+        on_delete=models.CASCADE,
+        limit_choices_to={'Location__type':'it_room', 'is_reserved': False, 'is_requested': True},
+        to_field='reference'
+    )
+
+    def save(self, *args, **kwargs):
+        equip = Inventory.objects.get(id=self.reference.id)
+        equip.is_reserved = False
+        equip.is_requested = False
+        equip.save()
+
+
+
 class AllocateHPC(models.Model):
     Reserved_by = models.ForeignKey(
         User,
@@ -624,25 +640,4 @@ class AllocateHPC(models.Model):
 
     def __str__(self):
         return self.Message
-
-
-
-# HPC
-# class allocatehpc(models.Model):
-#     reference = models.ForeignKey(
-#         Inventory,
-#         to_field='reference',
-#         on_delete=models.CASCADE,
-#         limit_choices_to={
-#             'Location__type': 'it_room',
-#             'is_reserved' : 'False'
-#         }
-#     )
-#     allocator = models.ForeignKey(
-#         settings.AUTH_USER_MODEL,
-#         editable=False,
-#         related_name='allocater',
-#         on_delete=models.CASCADE
-#     )
-#     purpose = models.CharField(max_length=250, default='')
 

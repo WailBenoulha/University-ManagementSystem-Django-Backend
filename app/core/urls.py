@@ -51,4 +51,6 @@ urlpatterns = [
     path('allocatehpc/<int:pk>', views.AllocateHPCApiView.as_view()),
     path('reservedhpc/', views.ReservedHPCApiView.as_view()),
     path('reservedhpc/<int:pk>', views.ReservedHPCApiView.as_view()),
+    path('convertrequest/', views.ConvertRequestedEqApiView.as_view()),
+    path('convertrequest/<int:pk>', views.ConvertRequestedEqApiView.as_view())
 ]+ static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)

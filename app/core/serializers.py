@@ -13,6 +13,7 @@ class AdminSerializer(serializers.ModelSerializer):
         fields = ('id','password', 'email', 'name', 'lastname', 'phonenumber', 'national_card_number', 'address', 'image')
 
     def create(self, validated_data):
+        image=validated_data.get('image',None)
         user = models.User.objects.create_user(
             role='ADMIN',
             password=validated_data['password'],
@@ -22,7 +23,7 @@ class AdminSerializer(serializers.ModelSerializer):
             phonenumber=validated_data['phonenumber'],
             national_card_number=validated_data['national_card_number'],
             address=validated_data['address'],
-            image=validated_data['image']
+            image=image
         )
 
         return user
@@ -34,6 +35,7 @@ class PrincipalmanagerSerializer(serializers.ModelSerializer):
         fields = ('id','password', 'email', 'name', 'lastname', 'phonenumber', 'national_card_number', 'address', 'image')
 
     def create(self, validated_data):
+        image=validated_data.get('image',None)
         user = models.User.objects.create_user(
             role='PRINCIPALMANAGER',
             password=validated_data['password'],
@@ -43,7 +45,7 @@ class PrincipalmanagerSerializer(serializers.ModelSerializer):
             phonenumber=validated_data['phonenumber'],
             national_card_number=validated_data['national_card_number'],
             address=validated_data['address'],
-            image=validated_data['image']
+            image=image
         )
 
         return user
@@ -54,6 +56,7 @@ class AllocationmanagerSerializer(serializers.ModelSerializer):
         fields = ('id','password', 'email', 'name', 'lastname', 'phonenumber', 'national_card_number', 'address', 'image')
 
     def create(self, validated_data):
+        image=validated_data.get('image',None)
         user = models.User.objects.create_user(
             role='ALLOCATIONMANAGER',
             password=validated_data['password'],
@@ -63,7 +66,7 @@ class AllocationmanagerSerializer(serializers.ModelSerializer):
             phonenumber=validated_data['phonenumber'],
             national_card_number=validated_data['national_card_number'],
             address=validated_data['address'],
-            image=validated_data['image']
+            image=image
         )
 
         return user
@@ -74,6 +77,7 @@ class StudentSerializer(serializers.ModelSerializer):
         fields = ('id','password', 'email', 'name', 'lastname', 'phonenumber', 'national_card_number', 'address', 'image')
 
     def create(self, validated_data):
+        image=validated_data.get('image',None)
         user = models.User.objects.create_user(
             role='STUDENT',
             password=validated_data['password'],
@@ -83,7 +87,7 @@ class StudentSerializer(serializers.ModelSerializer):
             phonenumber=validated_data['phonenumber'],
             national_card_number=validated_data['national_card_number'],
             address=validated_data['address'],
-            image=validated_data['image']
+            image=image
         )
 
         return user
@@ -94,6 +98,7 @@ class ResearcherSerializer(serializers.ModelSerializer):
         fields = ('id','password', 'email', 'name', 'lastname', 'phonenumber', 'national_card_number', 'address', 'image')
 
     def create(self, validated_data):
+        image=validated_data.get('image',None)
         user = models.User.objects.create_user(
             role='RESEARCHER',
             password=validated_data['password'],
@@ -103,7 +108,7 @@ class ResearcherSerializer(serializers.ModelSerializer):
             phonenumber=validated_data['phonenumber'],
             national_card_number=validated_data['national_card_number'],
             address=validated_data['address'],
-            image=validated_data['image']
+            image=image
         )
 
         return user
@@ -192,6 +197,11 @@ class ReturnEquipementSerializer(serializers.ModelSerializer):
 class ReturnEquipementhpcSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.ReturnEquipementhpc
+        fields = ('id', 'reference')
+
+class ConvertRequestedEq(serializers.ModelSerializer):
+    class Meta:
+        model = models.ConvertRequestedEq
         fields = ('id', 'reference')
 
 class AllocateHPCSerializer(serializers.ModelSerializer):
